@@ -36,8 +36,6 @@ extern "C"{
 	typedef void *              CFTimeZoneRef;
 	typedef int                 CFIndex;
 	typedef int                 CFTypeID;
-	typedef char                SInt8;
-	typedef wchar_t             UniChar;
 	typedef int                 CFStringEncoding;
 	typedef int                 CFURLPathStyle;     // posix=0, hfs=1, windows=2
 	typedef void *              CFBundleRef;
@@ -59,11 +57,11 @@ extern "C"{
 	};
 
 	struct CFGregorianUnits {
-		int years;
-		int months;
-		int days;
-		int hours;
-		int minutes;
+		int32_t years;
+		int32_t months;
+		int32_t days;
+		int32_t hours;
+		int32_t minutes;
 		double seconds;
 	};
 
