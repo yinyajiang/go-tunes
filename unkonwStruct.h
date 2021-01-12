@@ -2,7 +2,10 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
-
+#ifndef WIN32
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+#include <stdint.h>
 #pragma pack(push,1)
 
 /*Messages passed to device notification callbacks */
@@ -41,29 +44,26 @@ extern "C"{
 	typedef double              CFAbsoluteTime;
 	typedef double              CFTimeInterval;
 
-	typedef unsigned char       UInt8;
-	typedef int                 SInt32;
-
 	struct CFRange {
 		CFIndex location;
 		CFIndex length;
 	};
 
 	struct CFGregorianDate {
-		SInt32 year;
-		SInt8 month;
-		SInt8 day;
-		SInt8 hour;
-		SInt8 minute;
+		int year;
+		int8_t month;
+		int8_t day;
+		int8_t hour;
+		int8_t minute;
 		double second;
 	};
 
 	struct CFGregorianUnits {
-		SInt32 years;
-		SInt32 months;
-		SInt32 days;
-		SInt32 hours;
-		SInt32 minutes;
+		int years;
+		int months;
+		int days;
+		int hours;
+		int minutes;
 		double seconds;
 	};
 
@@ -116,8 +116,9 @@ extern "C"{
 struct  am_recovery_device;
 struct  am_dfu_device;
 struct  am_restore_device;
+struct  am_device_notification_callback_info;
 
-typedef void (__cdecl *BackupCallBack)(CFStringRef targetID, int percentOrErrorCode, int cookie, CFStringRef backupPath, void *, void *, void *, void *, void *, void *, void *, void *);
+typedef void  (__cdecl *BackupCallBack)(CFStringRef targetID, int percentOrErrorCode, int cookie, CFStringRef backupPath, void *, void *, void *, void *, void *, void *, void *, void *);
 typedef void (*am_restore_device_notification_callback)(struct am_recovery_device*,void*);
 typedef void (*am_dfu_device_notification_callback)(struct am_dfu_device*,void*);
 typedef void (*am_recovery_device_notification_callback)(struct am_restore_device*,int);

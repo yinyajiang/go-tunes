@@ -11,6 +11,7 @@ extern "C" {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //CoreFoundation.dll
+#ifdef WIN32
 void					CFRunLoopRun();
 CFStringRef				__CFStringMakeConstantString(const char *);
 void					CFRelease(CFTypeRef);
@@ -21,6 +22,7 @@ void*					kCFBooleanFalse();
 void*					kCFNumberPositiveInfinity();
 void*					kCFTypeDictionaryKeyCallBacks();
 void*					kCFTypeDictionaryValueCallBacks();
+
 CFMutableDictionaryRef  CFDictionaryCreateMutable(int, int, void*, void*);
 CFMutableDictionaryRef  CFDictionaryCreateMutableCopy(CFAllocatorRef, CFIndex, CFDictionaryRef);
 CFDictionaryRef		    CFDictionaryCreate(CFAllocatorRef, void*, void*, int, void*, void*);
@@ -115,7 +117,6 @@ CFTypeID				CFNumberFormatterGetTypeID();
 CFTypeID				_CFKeyedArchiverUIDGetTypeID();
 int						_CFKeyedArchiverUIDGetValue(void*);
 CFStringRef				CFStringCreateWithFormat(CFAllocatorRef, CFDictionaryRef, CFStringRef, ...);
-#ifndef WIN32
 CFBundleRef				CFBundleGetMainBundle();
 CFURLRef				CFBundleCopyBundleURL(CFBundleRef);
 CFURLRef				CFURLCreateCopyDeletingLastPathComponent(CFAllocatorRef, CFURLRef);
@@ -200,10 +201,10 @@ void*					AMRestoreModeDeviceCopySerialNumber(void*);
 
 int						AMRecoveryModeDeviceSendFileToDevice(void*, CFStringRef);
 int						AMRecoveryModeDeviceSendCommandToDevice(void*, CFStringRef);
-unsigned __int16		AMRecoveryModeDeviceGetProductID(void*);
+uint16_t		        AMRecoveryModeDeviceGetProductID(void*);
 unsigned long			AMRecoveryModeDeviceGetProductType(void*);
 unsigned long			AMRecoveryModeDeviceGetChipID(void*);
-unsigned __int64		AMRecoveryModeDeviceGetECID(void*);
+uint64_t		        AMRecoveryModeDeviceGetECID(void*);
 unsigned long			AMRecoveryModeDeviceGetLocationID(void*);
 unsigned long			AMRecoveryModeDeviceGetBoardID(void*);
 unsigned char			AMRecoveryModeDeviceGetProductionMode(void*);
@@ -213,26 +214,26 @@ int						AMRecoveryModeDeviceSetAutoBoot(void*, unsigned char);
 int						AMRecoveryModeDeviceReboot(void*);
 void*					AMRecoveryModeDeviceCopySerialNumber(void*);
 
-unsigned __int16		AMDFUModeDeviceGetProductID(void*);
+uint16_t		        AMDFUModeDeviceGetProductID(void*);
 unsigned long			AMDFUModeDeviceGetProductType(void*);
 unsigned long			AMDFUModeDeviceGetChipID(void*);
-unsigned __int64		AMDFUModeDeviceGetECID(void*);
+uint64_t		        AMDFUModeDeviceGetECID(void*);
 unsigned long			AMDFUModeDeviceGetLocationID(void*);
 unsigned long			AMDFUModeDeviceGetBoardID(void*);
 unsigned char			AMDFUModeDeviceGetProductionMode(void*);
 unsigned long			AMDFUModeDeviceGetTypeID(void*);
 
 int						AMRestorableDeviceRegisterForNotificationsForDevices(am_recovery_device_notification_callback, void*, unsigned int, void*, void*);
-int						AMRestorableDeviceRestore(am_restore_device*, CFDictionaryRef, void*, void*);
+int						AMRestorableDeviceRestore(struct am_restore_device*, CFDictionaryRef, void*, void*);
 int						AMRestorableDeviceGetState(void*);
 void*					AMRestorableDeviceCopyDFUModeDevice(void*);
 void*					AMRestorableDeviceCopyRecoveryModeDevice(void*);
 void*					AMRestorableDeviceCopyAMDevice(void*);
 void*					AMRestorableDeviceCreateFromAMDevice(void*);
-unsigned __int16		AMRestorableDeviceGetProductID(void*);
+uint16_t		        AMRestorableDeviceGetProductID(void*);
 unsigned long			AMRestorableDeviceGetProductType(void*);
 unsigned long			AMRestorableDeviceGetChipID(void*);
-unsigned __int64		AMRestorableDeviceGetECID(void*);
+uint64_t		        AMRestorableDeviceGetECID(void*);
 unsigned long			AMRestorableDeviceGetLocationID(void*);
 unsigned long			AMRestorableDeviceGetBoardID(void*);
 void*					AMRestorableDeviceCopySerialNumber(void*);

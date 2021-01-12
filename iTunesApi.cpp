@@ -1,7 +1,25 @@
 #include "iTunesApi.h"
 #include <string.h>
 #include <vector>
-
+#ifdef WIN32
+#define DLOPEN(path) 			    LoadLibrary(path);
+#define DLFREE(h)				    if (h) FreeLibrary(h);
+#define FUNC_LOAD(func)		   	    this->func = (PF_##func)GetProcAddress(m_hDll,#func);
+#define VALUE_LOAD(func)		    FUNC_LOAD(func);\
+									{ \
+										void** ppTmp = (void**)this->func; \
+										if (ppTmp) \
+											this->func = (PF_##func)*ppTmp; \
+									}
+#define DIRECZT_LOAD(func) 			FUNC_LOAD(func)
+#else
+#include <dlfcn.h>
+#define DLOPEN(path) 			    dlopen(path,RTLD_NOW);
+#define DLFREE(h)				    if (h) dlclose(h);
+#define DIRECZT_LOAD(func)			this->func = (PF_##func)::func;
+#define FUNC_LOAD(func)				this->func = (PF_##func)dlsym(m_hDll,#func);
+#define VALUE_LOAD(func)		    this->func = (PF_##func)(&::func);
+#endif
 
 void AddEnvLoadDir(std::wstring dir)
 {
@@ -40,36 +58,14 @@ CAirTrafficHost&    AirTrafficHost()
 }
 
 
-#ifdef WIN32
-#define FUNC_LOAD(_,func)		   this->func = (PF_##func)GetProcAddress(m_hDll,#func);
-#define VALUE_LOAD(func)		   FUNC_LOAD(0,func);\
-									{ \
-										void** ppTmp = (void**)this->func; \
-										if (ppTmp) \
-											this->func = (PF_##func)*ppTmp; \
-									}
-					
-#else
-#define FUNC_LOAD(direct,func) \
-				if (direct)\ 
-				{ \
-					this->func = (PF_##func)::func; \
-				} \
-				else {\
-					this->func = (PF_##func)::CFBundleGetFunctionPointerForName(pModle, CFStringCreateWithCString(NULL, #func, kCFStringEncodingUTF8));\
-				}
-#define VALUE_LOAD(func)		   this->func = (PF_##func)(&::func);
-#endif
 
 
 
 CCoreFoundation::CCoreFoundation(void)
 {
 #ifdef WIN32
-	m_hDll = LoadLibrary(L"CoreFoundation.dll");
-	if (NULL == m_hDll)
-		MessageBoxA(NULL, "CoreFoundation.dll load fail", "error", 0);
-#endif
+	m_hDll = DLOPEN(L"CoreFoundation.dll");
+
 	VALUE_LOAD(kCFAllocatorDefault);
 	VALUE_LOAD(kCFTypeArrayCallBacks);
 	VALUE_LOAD(kCFBooleanTrue);
@@ -78,105 +74,104 @@ CCoreFoundation::CCoreFoundation(void)
 	VALUE_LOAD(kCFTypeDictionaryKeyCallBacks);
 	VALUE_LOAD(kCFTypeDictionaryValueCallBacks);
 
-	FUNC_LOAD(1, CFRunLoopRun);
-	FUNC_LOAD(1, __CFStringMakeConstantString);
-	FUNC_LOAD(1, CFRelease);
-	FUNC_LOAD(1, CFDictionaryCreateMutable);
-	FUNC_LOAD(1, CFDictionaryCreateMutableCopy);
-	FUNC_LOAD(1, CFDictionaryCreate);
-	FUNC_LOAD(1, CFPropertyListCreateXMLData);
-	FUNC_LOAD(1, CFDataGetLength);
-	FUNC_LOAD(1, CFDataGetBytePtr);
-	FUNC_LOAD(1, CFArrayCreateMutable);
-	FUNC_LOAD(1, CFArrayCreateMutableCopy);
-	FUNC_LOAD(1, CFArrayAppendArray);
-	FUNC_LOAD(1, CFDictionarySetValue);
-	FUNC_LOAD(1, CFDictionaryAddValue);
-	FUNC_LOAD(1, CFDictionaryGetValue);
-	FUNC_LOAD(1, CFArrayGetCount);
-	FUNC_LOAD(1, CFArrayGetValueAtIndex);
-	FUNC_LOAD(1, CFArrayRemoveValueAtIndex);
-	FUNC_LOAD(1, CFArrayRemoveAllValues);
-	FUNC_LOAD(1, CFNumberCreate);
-	FUNC_LOAD(1, CFArrayAppendValue);
-	FUNC_LOAD(1, CFDataCreate);
-	FUNC_LOAD(1, CFDictionaryContainsKey);
-	FUNC_LOAD(1, CFStringCreateWithCString);
-	FUNC_LOAD(1, CFStringCreateWithCharacters);
-	FUNC_LOAD(1, CFStringCreateWithCharactersNoCopy);
-	FUNC_LOAD(1, CFStringGetLength);
-	FUNC_LOAD(1, CFURLCreateWithFileSystemPath);
-	FUNC_LOAD(1, CFReadStreamCreateWithFile);
-	FUNC_LOAD(1, CFReadStreamOpen);
-	FUNC_LOAD(1, CFReadStreamClose);
-	FUNC_LOAD(1, CFPropertyListCreateWithStream);
-	FUNC_LOAD(1, CFDataCreateMutable);
-	FUNC_LOAD(1, CFDataAppendBytes);
-	FUNC_LOAD(1, CFGetTypeID);
-	FUNC_LOAD(1, CFPropertyListCreateWithData);
-	FUNC_LOAD(1, CFPropertyListCreateFromXMLData);
-	FUNC_LOAD(1, CFDictionaryGetValueIfPresent);
-	FUNC_LOAD(1, CFDateGetAbsoluteTime);
-	FUNC_LOAD(1, CFDateCreate);
-	FUNC_LOAD(1, CFNumberGetType);
-	FUNC_LOAD(1, CFNumberGetValue);
-	FUNC_LOAD(1, CFStringGetSystemEncoding);
-	FUNC_LOAD(1, CFStringGetCStringPtr);
-	FUNC_LOAD(1, CFStringGetCString);
-	FUNC_LOAD(1, CFStringGetBytes);
-	FUNC_LOAD(1, CFPropertyListCreateData);
-	FUNC_LOAD(1, CFURLWriteDataAndPropertiesToResource);
-	FUNC_LOAD(1, CFDictionaryGetCount);
-	FUNC_LOAD(1, CFDictionaryGetKeysAndValues);
-	FUNC_LOAD(1, CFTimeZoneCopyDefault);
-	FUNC_LOAD(1, CFTimeZoneCopySystem);
-	FUNC_LOAD(1, CFTimeZoneCreateWithName);
-	FUNC_LOAD(1, CFTimeZoneCreateWithTimeIntervalFromGMT);
-	FUNC_LOAD(1, CFAbsoluteTimeGetCurrent);
-	FUNC_LOAD(1, CFAbsoluteTimeGetGregorianDate);
-	FUNC_LOAD(1, CFGregorianDateGetAbsoluteTime);
-	FUNC_LOAD(1, CFStringGetTypeID);
-	FUNC_LOAD(1, CFDictionaryGetTypeID);
-	FUNC_LOAD(1, CFDataGetTypeID);
-	FUNC_LOAD(1, CFNumberGetTypeID);
-	FUNC_LOAD(1, CFAllocatorGetTypeID);
-	FUNC_LOAD(1, CFURLGetTypeID);
-	FUNC_LOAD(1, CFReadStreamGetTypeID);
-	FUNC_LOAD(1, CFDictionaryReplaceValue);
-	FUNC_LOAD(1, CFArrayGetTypeID);
-	FUNC_LOAD(1, CFDateGetTypeID);
-	FUNC_LOAD(1, CFErrorGetTypeID);
-	FUNC_LOAD(1, CFNullGetTypeID);
-	FUNC_LOAD(1, CFBooleanGetTypeID);
-	FUNC_LOAD(1, CFAttributedStringGetTypeID);
-	FUNC_LOAD(1, CFBagGetTypeID);
-	FUNC_LOAD(1, CFBitVectorGetTypeID);
-	FUNC_LOAD(1, CFBundleGetTypeID);
-	FUNC_LOAD(1, CFCalendarGetTypeID);
-	FUNC_LOAD(1, CFCharacterSetGetTypeID);
-	FUNC_LOAD(1, CFLocaleGetTypeID);
-	FUNC_LOAD(1, CFRunArrayGetTypeID);
-	FUNC_LOAD(1, CFSetGetTypeID);
-	FUNC_LOAD(1, CFTimeZoneGetTypeID);
-	FUNC_LOAD(1, CFTreeGetTypeID);
-	FUNC_LOAD(1, CFUUIDGetTypeID);
-	FUNC_LOAD(1, CFWriteStreamGetTypeID);
-	FUNC_LOAD(1, CFXMLNodeGetTypeID);
-	FUNC_LOAD(1, CFStorageGetTypeID);
-	FUNC_LOAD(1, CFSocketGetTypeID);
-	FUNC_LOAD(1, CFWindowsNamedPipeGetTypeID);
-	FUNC_LOAD(1, CFPlugInGetTypeID);
-	FUNC_LOAD(1, CFPlugInInstanceGetTypeID);
-	FUNC_LOAD(1, CFBinaryHeapGetTypeID);
-	FUNC_LOAD(1, CFDateFormatterGetTypeID);
-	FUNC_LOAD(1, CFMessagePortGetTypeID);
-	FUNC_LOAD(1, CFNotificationCenterGetTypeID);
-	FUNC_LOAD(1, CFNumberFormatterGetTypeID);
-	FUNC_LOAD(1, _CFKeyedArchiverUIDGetTypeID);
-	FUNC_LOAD(1, _CFKeyedArchiverUIDGetValue);
-	FUNC_LOAD(1, CFStringCreateWithFormat);
+	FUNC_LOAD(CFRunLoopRun);
+	FUNC_LOAD(__CFStringMakeConstantString);
+	FUNC_LOAD(CFRelease);
+	FUNC_LOAD(CFDictionaryCreateMutable);
+	FUNC_LOAD(CFDictionaryCreateMutableCopy);
+	FUNC_LOAD(CFDictionaryCreate);
+	FUNC_LOAD(CFPropertyListCreateXMLData);
+	FUNC_LOAD(CFDataGetLength);
+	FUNC_LOAD(CFDataGetBytePtr);
+	FUNC_LOAD(CFArrayCreateMutable);
+	FUNC_LOAD(CFArrayCreateMutableCopy);
+	FUNC_LOAD(CFArrayAppendArray);
+	FUNC_LOAD(CFDictionarySetValue);
+	FUNC_LOAD(CFDictionaryAddValue);
+	FUNC_LOAD(CFDictionaryGetValue);
+	FUNC_LOAD(CFArrayGetCount);
+	FUNC_LOAD(CFArrayGetValueAtIndex);
+	FUNC_LOAD(CFArrayRemoveValueAtIndex);
+	FUNC_LOAD(CFArrayRemoveAllValues);
+	FUNC_LOAD(CFNumberCreate);
+	FUNC_LOAD(CFArrayAppendValue);
+	FUNC_LOAD(CFDataCreate);
+	FUNC_LOAD(CFDictionaryContainsKey);
+	FUNC_LOAD(CFStringCreateWithCString);
+	FUNC_LOAD(CFStringCreateWithCharacters);
+	FUNC_LOAD(CFStringCreateWithCharactersNoCopy);
+	FUNC_LOAD(CFStringGetLength);
+	FUNC_LOAD(CFURLCreateWithFileSystemPath);
+	FUNC_LOAD(CFReadStreamCreateWithFile);
+	FUNC_LOAD(CFReadStreamOpen);
+	FUNC_LOAD(CFReadStreamClose);
+	FUNC_LOAD(CFPropertyListCreateWithStream);
+	FUNC_LOAD(CFDataCreateMutable);
+	FUNC_LOAD(CFDataAppendBytes);
+	FUNC_LOAD(CFGetTypeID);
+	FUNC_LOAD(CFPropertyListCreateWithData);
+	FUNC_LOAD(CFPropertyListCreateFromXMLData);
+	FUNC_LOAD(CFDictionaryGetValueIfPresent);
+	FUNC_LOAD(CFDateGetAbsoluteTime);
+	FUNC_LOAD(CFDateCreate);
+	FUNC_LOAD(CFNumberGetType);
+	FUNC_LOAD(CFNumberGetValue);
+	FUNC_LOAD(CFStringGetSystemEncoding);
+	FUNC_LOAD(CFStringGetCStringPtr);
+	FUNC_LOAD(CFStringGetCString);
+	FUNC_LOAD(CFStringGetBytes);
+	FUNC_LOAD(CFPropertyListCreateData);
+	FUNC_LOAD(CFURLWriteDataAndPropertiesToResource);
+	FUNC_LOAD(CFDictionaryGetCount);
+	FUNC_LOAD(CFDictionaryGetKeysAndValues);
+	FUNC_LOAD(CFTimeZoneCopyDefault);
+	FUNC_LOAD(CFTimeZoneCopySystem);
+	FUNC_LOAD(CFTimeZoneCreateWithName);
+	FUNC_LOAD(CFTimeZoneCreateWithTimeIntervalFromGMT);
+	FUNC_LOAD(CFAbsoluteTimeGetCurrent);
+	FUNC_LOAD(CFAbsoluteTimeGetGregorianDate);
+	FUNC_LOAD(CFGregorianDateGetAbsoluteTime);
+	FUNC_LOAD(CFStringGetTypeID);
+	FUNC_LOAD(CFDictionaryGetTypeID);
+	FUNC_LOAD(CFDataGetTypeID);
+	FUNC_LOAD(CFNumberGetTypeID);
+	FUNC_LOAD(CFAllocatorGetTypeID);
+	FUNC_LOAD(CFURLGetTypeID);
+	FUNC_LOAD(CFReadStreamGetTypeID);
+	FUNC_LOAD(CFDictionaryReplaceValue);
+	FUNC_LOAD(CFArrayGetTypeID);
+	FUNC_LOAD(CFDateGetTypeID);
+	FUNC_LOAD(CFErrorGetTypeID);
+	FUNC_LOAD(CFNullGetTypeID);
+	FUNC_LOAD(CFBooleanGetTypeID);
+	FUNC_LOAD(CFAttributedStringGetTypeID);
+	FUNC_LOAD(CFBagGetTypeID);
+	FUNC_LOAD(CFBitVectorGetTypeID);
+	FUNC_LOAD(CFBundleGetTypeID);
+	FUNC_LOAD(CFCalendarGetTypeID);
+	FUNC_LOAD(CFCharacterSetGetTypeID);
+	FUNC_LOAD(CFLocaleGetTypeID);
+	FUNC_LOAD(CFRunArrayGetTypeID);
+	FUNC_LOAD(CFSetGetTypeID);
+	FUNC_LOAD(CFTimeZoneGetTypeID);
+	FUNC_LOAD(CFTreeGetTypeID);
+	FUNC_LOAD(CFUUIDGetTypeID);
+	FUNC_LOAD(CFWriteStreamGetTypeID);
+	FUNC_LOAD(CFXMLNodeGetTypeID);
+	FUNC_LOAD(CFStorageGetTypeID);
+	FUNC_LOAD(CFSocketGetTypeID);
+	FUNC_LOAD(CFWindowsNamedPipeGetTypeID);
+	FUNC_LOAD(CFPlugInGetTypeID);
+	FUNC_LOAD(CFPlugInInstanceGetTypeID);
+	FUNC_LOAD(CFBinaryHeapGetTypeID);
+	FUNC_LOAD(CFDateFormatterGetTypeID);
+	FUNC_LOAD(CFMessagePortGetTypeID);
+	FUNC_LOAD(CFNotificationCenterGetTypeID);
+	FUNC_LOAD(CFNumberFormatterGetTypeID);
+	FUNC_LOAD(_CFKeyedArchiverUIDGetTypeID);
+	FUNC_LOAD(_CFKeyedArchiverUIDGetValue);
+	FUNC_LOAD(CFStringCreateWithFormat);
 
-#ifdef WIN32
 	if (NULL == __CFStringMakeConstantString)
 		MessageBoxA(NULL, "CoreFoundation.dll load fun fail", "error", 0);
 #endif
@@ -186,10 +181,7 @@ CCoreFoundation::CCoreFoundation(void)
 
 CCoreFoundation::~CCoreFoundation(void)
 {
-#ifdef WIN32
-	if (m_hDll)
-		FreeLibrary(m_hDll);
-#endif
+	DLFREE(m_hDll)
 }
 
 
@@ -197,213 +189,199 @@ CMobileDevice::CMobileDevice(bool newdll)
 {
 #ifdef WIN32
 	if (newdll)
-		m_hDll = LoadLibrary(L"MobileDevice.dll");
+		m_hDll = DLOPEN(L"MobileDevice.dll");
 	else
-		m_hDll = LoadLibrary(L"iTunesMobileDevice.dll");
+		m_hDll = DLOPEN(L"iTunesMobileDevice.dll");
 	if (NULL == m_hDll)
 		MessageBoxA(NULL, "MobileDevice.dll load fail", "error", 0);
 #else
-	const char* cDylibPath = "/System/Library/PrivateFrameworks/MobileDevice.framework";
-	CFStringRef pdllPath = ::CFStringCreateWithCString((::CFAllocatorRef)0, cDylibPath, 134217984);
-	if (NULL == pdllPath) 
-		return;
-	CFURLRef pURLRef = ::CFURLCreateWithFileSystemPath(0, pdllPath, kCFURLPOSIXPathStyle, 0);
-	if (NULL == pURLRef) 
-		return; 
-	CFBundleRef pModle = ::CFBundleCreate(::kCFAllocatorDefault, pURLRef);
-	if (NULL == pModle) 
-		return; 
+	m_hDll = DLOPEN("/System/Library/PrivateFrameworks/MobileDevice.framework/MobileDevice");
+	if (NULL == m_hDll)
+		printf("MobileDevice.dll load fail");
 #endif
-	FUNC_LOAD(0,AMDeviceLookupApplications);
-	FUNC_LOAD(0,AMDeviceInstallApplication);
-	FUNC_LOAD(0,AMDeviceRemoveApplicationArchive);
-	FUNC_LOAD(0,AMDeviceUninstallApplication);
-	FUNC_LOAD(0,AMDeviceArchiveApplication);
-	FUNC_LOAD(0,AMDeviceStartHouseArrestService);
-	FUNC_LOAD(0,AFCConnectionOpen);
-	FUNC_LOAD(0,AMDServiceConnectionInvalidate);
-	FUNC_LOAD(0,AMDeviceNotificationSubscribe);
-	FUNC_LOAD(0,AMDeviceNotificationUnsubscribe);
-	FUNC_LOAD(0,AMDeviceRelease);
-	FUNC_LOAD(0,AMDeviceConnect);
-	FUNC_LOAD(0,AMDeviceDisconnect);
-	FUNC_LOAD(0,AMDeviceIsPaired);
-	FUNC_LOAD(0,AMDeviceValidatePairing);
-	FUNC_LOAD(0,AMDevicePair);
-	FUNC_LOAD(0,AMDeviceUnpair);
-	FUNC_LOAD(0,AMDeviceStartSession);
-	FUNC_LOAD(0,AMDeviceSecureStartService);
-	FUNC_LOAD(0,AMDeviceStartService);
-	FUNC_LOAD(0,AMDeviceStopSession);
-	FUNC_LOAD(0,AFCConnectionClose);
-	FUNC_LOAD(0,AFCDeviceInfoOpen);
-	FUNC_LOAD(0,AFCFileInfoOpen);
-	FUNC_LOAD(0,AFCKeyValueRead);
-	FUNC_LOAD(0,AFCKeyValueClose);
-	FUNC_LOAD(0,AFCDirectoryOpen);
-	FUNC_LOAD(0,AFCDirectoryRead);
-	FUNC_LOAD(0,AFCDirectoryClose);
-	FUNC_LOAD(0,AFCDirectoryCreate);
-	FUNC_LOAD(0,AFCRemovePath);
-	FUNC_LOAD(0,AFCRenamePath);
-	FUNC_LOAD(0,AFCFileRefOpen);
-	FUNC_LOAD(0,AFCFileRefRead);
-	FUNC_LOAD(0,AFCFileRefWrite);
-	FUNC_LOAD(0,AFCFileRefClose);
-	FUNC_LOAD(0,AFCFileRefSeek);
-	FUNC_LOAD(0,AFCFileRefTell);
-	FUNC_LOAD(0,AMDeviceCopyDeviceIdentifier);
-	FUNC_LOAD(0,AMDeviceCopyValue);
-	FUNC_LOAD(0,AMDeviceGetInterfaceType);
-	FUNC_LOAD(0,AMRestoreRegisterForDeviceNotifications);
-	FUNC_LOAD(0,USBMuxConnectByPort);
-	FUNC_LOAD(0,AMRestorePerformRecoveryModeRestore);
-	FUNC_LOAD(0,AMRestorePerformDFURestore);
-	FUNC_LOAD(0,AMRestorableDeviceRegisterForNotificationsForDevices);
-	FUNC_LOAD(0,AMRestoreUnregisterForDeviceNotifications);
-	FUNC_LOAD(0,AMRestorableDeviceRestore);
-	FUNC_LOAD(0,AMSRestoreWithApplications);
-	FUNC_LOAD(0,AMSUnregisterTarget);
-	FUNC_LOAD(0,AMDeviceSetValue);
-	FUNC_LOAD(0,AMRecoveryModeDeviceSendFileToDevice);
-	FUNC_LOAD(0,AMRecoveryModeDeviceSendCommandToDevice);
-	FUNC_LOAD(0,AMRecoveryModeDeviceGetProductID);
-	FUNC_LOAD(0,AMRecoveryModeDeviceGetProductType);
-	FUNC_LOAD(0,AMRecoveryModeDeviceGetChipID);
-	FUNC_LOAD(0,AMRecoveryModeDeviceGetECID);
-	FUNC_LOAD(0,AMRecoveryModeDeviceGetLocationID);
-	FUNC_LOAD(0,AMRecoveryModeDeviceGetBoardID);
-	FUNC_LOAD(0,AMRecoveryModeDeviceGetProductionMode);
-	FUNC_LOAD(0,AMRecoveryModeDeviceGetTypeID);
-	FUNC_LOAD(0,AMRecoveryModeGetSoftwareBuildVersion);
-	FUNC_LOAD(0,AMDFUModeDeviceGetProductID);
-	FUNC_LOAD(0,AMDFUModeDeviceGetProductType);
-	FUNC_LOAD(0,AMDFUModeDeviceGetChipID);
-	FUNC_LOAD(0,AMDFUModeDeviceGetECID);
-	FUNC_LOAD(0,AMDFUModeDeviceGetLocationID);
-	FUNC_LOAD(0,AMDFUModeDeviceGetBoardID);
-	FUNC_LOAD(0,AMDFUModeDeviceGetProductionMode);
-	FUNC_LOAD(0,AMDFUModeDeviceGetTypeID);
-	FUNC_LOAD(0,AMRecoveryModeDeviceSetAutoBoot);
-	FUNC_LOAD(0,AMRecoveryModeDeviceReboot);
-	FUNC_LOAD(0,AMRestoreModeDeviceReboot);
-	FUNC_LOAD(0,AMRestoreEnableFileLogging);
-	FUNC_LOAD(0,AMRestoreDisableFileLogging);
-	FUNC_LOAD(0,AMRestorableDeviceGetState);
-	FUNC_LOAD(0,AMRestorableDeviceCopyDFUModeDevice);
-	FUNC_LOAD(0,AMRestorableDeviceCopyRecoveryModeDevice);
-	FUNC_LOAD(0,AMRestorableDeviceCopyAMDevice);
-	FUNC_LOAD(0,AMRestorableDeviceCreateFromAMDevice);
-	FUNC_LOAD(0,AMRestorableDeviceGetProductID);
-	FUNC_LOAD(0,AMRestorableDeviceGetProductType);
-	FUNC_LOAD(0,AMRestorableDeviceGetChipID);
-	FUNC_LOAD(0,AMRestorableDeviceGetECID);
-	FUNC_LOAD(0,AMRestorableDeviceGetLocationID);
-	FUNC_LOAD(0,AMRestorableDeviceGetBoardID);
-	FUNC_LOAD(0,AMRestoreModeDeviceGetTypeID);
-	FUNC_LOAD(0,AMRestoreModeDeviceCopySerialNumber);
-	FUNC_LOAD(0,AMRestorableDeviceCopySerialNumber);
-	FUNC_LOAD(0,AMRecoveryModeDeviceCopySerialNumber);
-	FUNC_LOAD(0,AFCConnectionGetContext);
-	FUNC_LOAD(0,AFCConnectionGetFSBlockSize);
-	FUNC_LOAD(0,AFCConnectionGetIOTimeout);
-	FUNC_LOAD(0,AFCConnectionGetSocketBlockSize);
-	FUNC_LOAD(0,AMRestoreCreateDefaultOptions);
-	FUNC_LOAD(0,AMRestorePerformRestoreModeRestore);
-	FUNC_LOAD(0,AMRestoreModeDeviceCreate);
-	FUNC_LOAD(0,AMRestoreCreatePathsForBundle);
-	FUNC_LOAD(0,AMDeviceGetConnectionID);
-	FUNC_LOAD(0,AMDeviceEnterRecovery);
-	FUNC_LOAD(0,AMDeviceRetain);
-	FUNC_LOAD(0,AMDShutdownNotificationProxy);
-	FUNC_LOAD(0,AMDeviceDeactivate);
-	FUNC_LOAD(0,AMDeviceActivate);
-	FUNC_LOAD(0,AMDeviceRemoveValue);
-	FUNC_LOAD(0,USBMuxListenerCreate);
-	FUNC_LOAD(0,USBMuxListenerHandleData);
-	FUNC_LOAD(0,AMDObserveNotification);
-	FUNC_LOAD(0,AMSInitialize);
-	FUNC_LOAD(0,AMDListenForNotifications);
-	FUNC_LOAD(0,AMDeviceStartServiceWithOptions);
-	FUNC_LOAD(0,AMDServiceConnectionCreate);
-	FUNC_LOAD(0,AMDServiceConnectionGetSocket);
-	FUNC_LOAD(0,AMDServiceConnectionGetSecureIOContext);
-	FUNC_LOAD(0,AMDServiceConnectionReceive);
-	FUNC_LOAD(0,AMDServiceConnectionSend);
-	FUNC_LOAD(0,AMDServiceConnectionReceiveMessage);
-	FUNC_LOAD(0,AMDServiceConnectionSendMessage);
-	FUNC_LOAD(0,AMSChangeBackupPassword);
-	FUNC_LOAD(0,AMSBackupWithOptions);
-	FUNC_LOAD(0,AMSCancelBackupRestore);
-	FUNC_LOAD(0,AMSGetErrorReasonForErrorCode);
+	FUNC_LOAD(AMDeviceLookupApplications);
+	FUNC_LOAD(AMDeviceInstallApplication);
+	FUNC_LOAD(AMDeviceRemoveApplicationArchive);
+	FUNC_LOAD(AMDeviceUninstallApplication);
+	FUNC_LOAD(AMDeviceArchiveApplication);
+	FUNC_LOAD(AMDeviceStartHouseArrestService);
+	FUNC_LOAD(AFCConnectionOpen);
+	FUNC_LOAD(AMDServiceConnectionInvalidate);
+	FUNC_LOAD(AMDeviceNotificationSubscribe);
+	FUNC_LOAD(AMDeviceNotificationUnsubscribe);
+	FUNC_LOAD(AMDeviceRelease);
+	FUNC_LOAD(AMDeviceConnect);
+	FUNC_LOAD(AMDeviceDisconnect);
+	FUNC_LOAD(AMDeviceIsPaired);
+	FUNC_LOAD(AMDeviceValidatePairing);
+	FUNC_LOAD(AMDevicePair);
+	FUNC_LOAD(AMDeviceUnpair);
+	FUNC_LOAD(AMDeviceStartSession);
+	FUNC_LOAD(AMDeviceSecureStartService);
+	FUNC_LOAD(AMDeviceStartService);
+	FUNC_LOAD(AMDeviceStopSession);
+	FUNC_LOAD(AFCConnectionClose);
+	FUNC_LOAD(AFCDeviceInfoOpen);
+	FUNC_LOAD(AFCFileInfoOpen);
+	FUNC_LOAD(AFCKeyValueRead);
+	FUNC_LOAD(AFCKeyValueClose);
+	FUNC_LOAD(AFCDirectoryOpen);
+	FUNC_LOAD(AFCDirectoryRead);
+	FUNC_LOAD(AFCDirectoryClose);
+	FUNC_LOAD(AFCDirectoryCreate);
+	FUNC_LOAD(AFCRemovePath);
+	FUNC_LOAD(AFCRenamePath);
+	FUNC_LOAD(AFCFileRefOpen);
+	FUNC_LOAD(AFCFileRefRead);
+	FUNC_LOAD(AFCFileRefWrite);
+	FUNC_LOAD(AFCFileRefClose);
+	FUNC_LOAD(AFCFileRefSeek);
+	FUNC_LOAD(AFCFileRefTell);
+	FUNC_LOAD(AMDeviceCopyDeviceIdentifier);
+	FUNC_LOAD(AMDeviceCopyValue);
+	FUNC_LOAD(AMDeviceGetInterfaceType);
+	FUNC_LOAD(AMRestoreRegisterForDeviceNotifications);
+	FUNC_LOAD(USBMuxConnectByPort);
+	FUNC_LOAD(AMRestorePerformRecoveryModeRestore);
+	FUNC_LOAD(AMRestorePerformDFURestore);
+	FUNC_LOAD(AMRestorableDeviceRegisterForNotificationsForDevices);
+	FUNC_LOAD(AMRestoreUnregisterForDeviceNotifications);
+	FUNC_LOAD(AMRestorableDeviceRestore);
+	FUNC_LOAD(AMSRestoreWithApplications);
+	FUNC_LOAD(AMSUnregisterTarget);
+	FUNC_LOAD(AMDeviceSetValue);
+	FUNC_LOAD(AMRecoveryModeDeviceSendFileToDevice);
+	FUNC_LOAD(AMRecoveryModeDeviceSendCommandToDevice);
+	FUNC_LOAD(AMRecoveryModeDeviceGetProductID);
+	FUNC_LOAD(AMRecoveryModeDeviceGetProductType);
+	FUNC_LOAD(AMRecoveryModeDeviceGetChipID);
+	FUNC_LOAD(AMRecoveryModeDeviceGetECID);
+	FUNC_LOAD(AMRecoveryModeDeviceGetLocationID);
+	FUNC_LOAD(AMRecoveryModeDeviceGetBoardID);
+	FUNC_LOAD(AMRecoveryModeDeviceGetProductionMode);
+	FUNC_LOAD(AMRecoveryModeDeviceGetTypeID);
+	FUNC_LOAD(AMRecoveryModeGetSoftwareBuildVersion);
+	FUNC_LOAD(AMDFUModeDeviceGetProductID);
+	FUNC_LOAD(AMDFUModeDeviceGetProductType);
+	FUNC_LOAD(AMDFUModeDeviceGetChipID);
+	FUNC_LOAD(AMDFUModeDeviceGetECID);
+	FUNC_LOAD(AMDFUModeDeviceGetLocationID);
+	FUNC_LOAD(AMDFUModeDeviceGetBoardID);
+	FUNC_LOAD(AMDFUModeDeviceGetProductionMode);
+	FUNC_LOAD(AMDFUModeDeviceGetTypeID);
+	FUNC_LOAD(AMRecoveryModeDeviceSetAutoBoot);
+	FUNC_LOAD(AMRecoveryModeDeviceReboot);
+	FUNC_LOAD(AMRestoreModeDeviceReboot);
+	FUNC_LOAD(AMRestoreEnableFileLogging);
+	FUNC_LOAD(AMRestoreDisableFileLogging);
+	FUNC_LOAD(AMRestorableDeviceGetState);
+	FUNC_LOAD(AMRestorableDeviceCopyDFUModeDevice);
+	FUNC_LOAD(AMRestorableDeviceCopyRecoveryModeDevice);
+	FUNC_LOAD(AMRestorableDeviceCopyAMDevice);
+	FUNC_LOAD(AMRestorableDeviceCreateFromAMDevice);
+	FUNC_LOAD(AMRestorableDeviceGetProductID);
+	FUNC_LOAD(AMRestorableDeviceGetProductType);
+	FUNC_LOAD(AMRestorableDeviceGetChipID);
+	FUNC_LOAD(AMRestorableDeviceGetECID);
+	FUNC_LOAD(AMRestorableDeviceGetLocationID);
+	FUNC_LOAD(AMRestorableDeviceGetBoardID);
+	FUNC_LOAD(AMRestoreModeDeviceGetTypeID);
+	FUNC_LOAD(AMRestoreModeDeviceCopySerialNumber);
+	FUNC_LOAD(AMRestorableDeviceCopySerialNumber);
+	FUNC_LOAD(AMRecoveryModeDeviceCopySerialNumber);
+	FUNC_LOAD(AFCConnectionGetContext);
+	FUNC_LOAD(AFCConnectionGetFSBlockSize);
+	FUNC_LOAD(AFCConnectionGetIOTimeout);
+	FUNC_LOAD(AFCConnectionGetSocketBlockSize);
+	FUNC_LOAD(AMRestoreCreateDefaultOptions);
+	FUNC_LOAD(AMRestorePerformRestoreModeRestore);
+	FUNC_LOAD(AMRestoreModeDeviceCreate);
+	FUNC_LOAD(AMRestoreCreatePathsForBundle);
+	FUNC_LOAD(AMDeviceGetConnectionID);
+	FUNC_LOAD(AMDeviceEnterRecovery);
+	FUNC_LOAD(AMDeviceRetain);
+	FUNC_LOAD(AMDShutdownNotificationProxy);
+	FUNC_LOAD(AMDeviceDeactivate);
+	FUNC_LOAD(AMDeviceActivate);
+	FUNC_LOAD(AMDeviceRemoveValue);
+	FUNC_LOAD(USBMuxListenerCreate);
+	FUNC_LOAD(USBMuxListenerHandleData);
+	FUNC_LOAD(AMDObserveNotification);
+	FUNC_LOAD(AMSInitialize);
+	FUNC_LOAD(AMDListenForNotifications);
+	FUNC_LOAD(AMDeviceStartServiceWithOptions);
+	FUNC_LOAD(AMDServiceConnectionCreate);
+	FUNC_LOAD(AMDServiceConnectionGetSocket);
+	FUNC_LOAD(AMDServiceConnectionGetSecureIOContext);
+	FUNC_LOAD(AMDServiceConnectionReceive);
+	FUNC_LOAD(AMDServiceConnectionSend);
+	FUNC_LOAD(AMDServiceConnectionReceiveMessage);
+	FUNC_LOAD(AMDServiceConnectionSendMessage);
+	FUNC_LOAD(AMSChangeBackupPassword);
+	FUNC_LOAD(AMSBackupWithOptions);
+	FUNC_LOAD(AMSCancelBackupRestore);
+	FUNC_LOAD(AMSGetErrorReasonForErrorCode);
 
 #ifdef WIN32
 	if (NULL == AMDeviceNotificationSubscribe)
 		MessageBoxA(NULL, "MobileDevice.dll load fun fail", "error", 0);
+#else
+	if (NULL == AMDeviceNotificationSubscribe)
+		printf("MobileDevice.dll load fun fail");
 #endif
 }
 
 CMobileDevice::~CMobileDevice(void)
 {
-#ifdef WIN32
-	if (m_hDll)
-		FreeLibrary(m_hDll);
-#endif
+	DLFREE(m_hDll)
 }
 
 
 CAirTrafficHost::CAirTrafficHost(void)
 {
 #ifdef WIN32
-	m_hDll = LoadLibrary(L"AirTrafficHost.dll");
+	m_hDll = DLOPEN(L"AirTrafficHost.dll");
 	if (NULL == m_hDll)
 		MessageBoxA(NULL, "AirTrafficHost.dll load fail", "error", 0);
 #else
-	const char* cDylibPath = "/System/Library/PrivateFrameworks/AirTrafficHost.framework";
-	CFStringRef pdllPath = ::CFStringCreateWithCString((::CFAllocatorRef)0, cDylibPath, 134217984);
-	if (NULL == pdllPath)
-		return;
-	CFURLRef pURLRef = ::CFURLCreateWithFileSystemPath(0, pdllPath, kCFURLPOSIXPathStyle, 0);
-	if (NULL == pURLRef)
-		return;
-	CFBundleRef pModle = ::CFBundleCreate(::kCFAllocatorDefault, pURLRef);
-	if (NULL == pModle)
-		return;
+	m_hDll = DLOPEN("/System/Library/PrivateFrameworks/AirTrafficHost.framework/AirTrafficHost");
+	if (NULL == m_hDll)
+		printf("AirTrafficHost load fail");
 #endif
-	FUNC_LOAD(0, ATCFMessageGetParam);
-	FUNC_LOAD(0, ATHostConnectionCreate);
-	FUNC_LOAD(0, ATHostConnectionCreateWithLibrary);
-	FUNC_LOAD(0, ATHostConnectionSendPing);
-	FUNC_LOAD(0, ATHostConnectionSendAssetMetricsRequest);
-	FUNC_LOAD(0, ATHostConnectionInvalidate);
-	FUNC_LOAD(0, ATHostConnectionClose);
-	FUNC_LOAD(0, ATHostConnectionGetCurrentSessionNumber);
-	FUNC_LOAD(0, ATHostConnectionRelease);
-	FUNC_LOAD(0, ATHostConnectionSendPowerAssertion);
-	FUNC_LOAD(0, ATHostConnectionRetain);
-	FUNC_LOAD(0, ATHostConnectionSendMetadataSyncFinished);
-	FUNC_LOAD(0, ATHostConnectionSendFileError);
-	FUNC_LOAD(0, ATCFMessageCreate);
-	FUNC_LOAD(0, ATHostConnectionSendFileProgress);
-	FUNC_LOAD(0, ATHostConnectionSendAssetCompleted);
-	FUNC_LOAD(0, ATCFMessageGetName);
-	FUNC_LOAD(0, ATHostConnectionSendHostInfo);
-	FUNC_LOAD(0, ATHostConnectionSendSyncRequest);
-	FUNC_LOAD(0, ATHostConnectionSendMessage);
-	FUNC_LOAD(0, ATHostConnectionGetGrappaSessionId);
-	FUNC_LOAD(0, ATHostConnectionReadMessage);
+	FUNC_LOAD(ATCFMessageGetParam);
+	FUNC_LOAD(ATHostConnectionCreate);
+	FUNC_LOAD(ATHostConnectionCreateWithLibrary);
+	FUNC_LOAD(ATHostConnectionSendPing);
+	FUNC_LOAD(ATHostConnectionSendAssetMetricsRequest);
+	FUNC_LOAD(ATHostConnectionInvalidate);
+	FUNC_LOAD(ATHostConnectionClose);
+	FUNC_LOAD(ATHostConnectionGetCurrentSessionNumber);
+	FUNC_LOAD(ATHostConnectionRelease);
+	FUNC_LOAD(ATHostConnectionSendPowerAssertion);
+	FUNC_LOAD(ATHostConnectionRetain);
+	FUNC_LOAD(ATHostConnectionSendMetadataSyncFinished);
+	FUNC_LOAD(ATHostConnectionSendFileError);
+	FUNC_LOAD(ATCFMessageCreate);
+	FUNC_LOAD(ATHostConnectionSendFileProgress);
+	FUNC_LOAD(ATHostConnectionSendAssetCompleted);
+	FUNC_LOAD(ATCFMessageGetName);
+	FUNC_LOAD(ATHostConnectionSendHostInfo);
+	FUNC_LOAD(ATHostConnectionSendSyncRequest);
+	FUNC_LOAD(ATHostConnectionSendMessage);
+	FUNC_LOAD(ATHostConnectionGetGrappaSessionId);
+	FUNC_LOAD(ATHostConnectionReadMessage);
 #ifdef WIN32
 	if (NULL == ATHostConnectionReadMessage)
 		MessageBoxA(NULL, "AirTrafficHost.dll load fun fail", "error", 0);
+#else
+	if (NULL == ATHostConnectionReadMessage)
+		printf("AirTrafficHost.dll load fun fail");
 #endif
 }
 
 CAirTrafficHost::~CAirTrafficHost(void)
 {
-#ifdef WIN32
-	if (m_hDll)
-		FreeLibrary(m_hDll);
-#endif
+	DLFREE(m_hDll)
 }
 
 

@@ -3,6 +3,7 @@
 #include <windows.h>
 #else
 #include <CoreFoundation/CoreFoundation.h>
+typedef	void* HMODULE;
 #endif
 #include "unkonwStruct.h"
 #include <string>
@@ -21,6 +22,7 @@ public:
 	CCoreFoundation(void);
 	~CCoreFoundation(void);
 public:
+#ifdef WIN32
 	FUNC_DEF(void, CFRunLoopRun);
 	FUNC_DEF(CFStringRef, __CFStringMakeConstantString, const char *);
 	FUNC_DEF(void, CFRelease, CFTypeRef);
@@ -130,11 +132,9 @@ public:
 	FUNC_DEF(CFURLRef, CFBundleCopyBundleURL, CFBundleRef);
 	FUNC_DEF(CFURLRef, CFURLCreateCopyDeletingLastPathComponent, CFAllocatorRef, CFURLRef);
 	FUNC_DEF(void*, CFURLGetFileSystemRepresentation, CFURLRef, void*, UInt8 *, CFIndex);
-
-private:
-#ifdef WIN32
-	HMODULE m_hDll = 0;
 #endif
+private:
+	HMODULE m_hDll = 0;
 };
 
 
@@ -200,19 +200,19 @@ public:
 	FUNC_DEF(int, AMDeviceSetValue, void*, void*, void*, void*);
 	FUNC_DEF(int, AMRecoveryModeDeviceSendFileToDevice, void*, CFStringRef);
 	FUNC_DEF(int, AMRecoveryModeDeviceSendCommandToDevice, void*, CFStringRef);
-	FUNC_DEF(unsigned __int16, AMRecoveryModeDeviceGetProductID, void*);
+	FUNC_DEF(uint16_t, AMRecoveryModeDeviceGetProductID, void*);
 	FUNC_DEF(unsigned long, AMRecoveryModeDeviceGetProductType, void*);
 	FUNC_DEF(unsigned long, AMRecoveryModeDeviceGetChipID, void*);
-	FUNC_DEF(unsigned __int64, AMRecoveryModeDeviceGetECID, void*);
+	FUNC_DEF(uint64_t, AMRecoveryModeDeviceGetECID, void*);
 	FUNC_DEF(unsigned long, AMRecoveryModeDeviceGetLocationID, void*);
 	FUNC_DEF(unsigned long, AMRecoveryModeDeviceGetBoardID, void*);
 	FUNC_DEF(unsigned char, AMRecoveryModeDeviceGetProductionMode, void*);
 	FUNC_DEF(unsigned long, AMRecoveryModeDeviceGetTypeID, void*);
 	FUNC_DEF(void*, AMRecoveryModeGetSoftwareBuildVersion, void*);
-	FUNC_DEF(unsigned __int16, AMDFUModeDeviceGetProductID, void*);
+	FUNC_DEF(uint16_t, AMDFUModeDeviceGetProductID, void*);
 	FUNC_DEF(unsigned long, AMDFUModeDeviceGetProductType, void*);
 	FUNC_DEF(unsigned long, AMDFUModeDeviceGetChipID, void*);
-	FUNC_DEF(unsigned __int64, AMDFUModeDeviceGetECID, void*);
+	FUNC_DEF(uint64_t, AMDFUModeDeviceGetECID, void*);
 	FUNC_DEF(unsigned long, AMDFUModeDeviceGetLocationID, void*);
 	FUNC_DEF(unsigned long, AMDFUModeDeviceGetBoardID, void*);
 	FUNC_DEF(unsigned char, AMDFUModeDeviceGetProductionMode, void*);
@@ -227,10 +227,10 @@ public:
 	FUNC_DEF(void*, AMRestorableDeviceCopyRecoveryModeDevice, void*);
 	FUNC_DEF(void*, AMRestorableDeviceCopyAMDevice, void*);
 	FUNC_DEF(void*, AMRestorableDeviceCreateFromAMDevice, void*);
-	FUNC_DEF(unsigned __int16, AMRestorableDeviceGetProductID, void*);
+	FUNC_DEF(uint16_t, AMRestorableDeviceGetProductID, void*);
 	FUNC_DEF(unsigned long, AMRestorableDeviceGetProductType, void*);
 	FUNC_DEF(unsigned long, AMRestorableDeviceGetChipID, void*);
-	FUNC_DEF(unsigned __int64, AMRestorableDeviceGetECID, void*);
+	FUNC_DEF(uint64_t, AMRestorableDeviceGetECID, void*);
 	FUNC_DEF(unsigned long, AMRestorableDeviceGetLocationID, void*);
 	FUNC_DEF(unsigned long, AMRestorableDeviceGetBoardID, void*);
 	FUNC_DEF(unsigned long, AMRestoreModeDeviceGetTypeID, void*);
@@ -271,9 +271,7 @@ public:
 	FUNC_DEF(CFStringRef, AMSGetErrorReasonForErrorCode, int);
 
 private:
-#ifdef WIN32
 	HMODULE m_hDll = 0;
-#endif
 };
 
 
@@ -308,9 +306,7 @@ public:
 	FUNC_DEF(int, ATHostConnectionGetGrappaSessionId, int);
 	FUNC_DEF(void*, ATHostConnectionReadMessage, void*);
 private:
-#ifdef WIN32
 	HMODULE m_hDll = 0;
-#endif
 };
 
 

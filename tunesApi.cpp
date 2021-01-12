@@ -1,12 +1,10 @@
-// iTunesWraper.cpp : Defines the exported functions for the DLL application.
-//
-#pragma once
+#include "tunesApi.h"
 #ifndef WIN32
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 #include "unkonwStruct.h"
 #include "iTunesApi.h"
-#include "tunesapi.h"
+
 
 
 void AddLoadDir(wchar_t* dir)
@@ -20,6 +18,7 @@ void AddLoadDir(wchar_t* dir)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //CoreFoundation.dll
+#ifdef WIN32
 void	CFRunLoopRun()
 {
 	CoreFoundation().CFRunLoopRun();
@@ -478,7 +477,7 @@ CFStringRef CFStringCreateWithFormat(CFAllocatorRef r1, CFDictionaryRef r2, CFSt
 	va_end(vl);
 	return ret;
 }
-#ifndef WIN32
+
 CFBundleRef CFBundleGetMainBundle()
 {
 	return CoreFoundation().CFBundleGetMainBundle();
@@ -711,7 +710,7 @@ int AMRecoveryModeDeviceSendCommandToDevice(void* r1, CFStringRef r2)
 {
 	return MobileDevice().AMRecoveryModeDeviceSendCommandToDevice(r1, r2);
 }
-unsigned __int16 AMRecoveryModeDeviceGetProductID(void* r1)
+uint16_t AMRecoveryModeDeviceGetProductID(void* r1)
 {
 	return MobileDevice().AMRecoveryModeDeviceGetProductID(r1);
 }
@@ -723,7 +722,7 @@ unsigned long AMRecoveryModeDeviceGetChipID(void* r1)
 {
 	return MobileDevice().AMRecoveryModeDeviceGetChipID(r1);
 }
-unsigned __int64 AMRecoveryModeDeviceGetECID(void* r1)
+uint64_t AMRecoveryModeDeviceGetECID(void* r1)
 {
 	return MobileDevice().AMRecoveryModeDeviceGetECID(r1);
 }
@@ -747,7 +746,7 @@ void* AMRecoveryModeGetSoftwareBuildVersion(void* r1)
 {
 	return MobileDevice().AMRecoveryModeGetSoftwareBuildVersion(r1);
 }
-unsigned __int16 AMDFUModeDeviceGetProductID(void* r1)
+uint16_t AMDFUModeDeviceGetProductID(void* r1)
 {
 	return MobileDevice().AMDFUModeDeviceGetProductID(r1);
 }
@@ -759,7 +758,7 @@ unsigned long AMDFUModeDeviceGetChipID(void* r1)
 {
 	return MobileDevice().AMDFUModeDeviceGetChipID(r1);
 }
-unsigned __int64 AMDFUModeDeviceGetECID(void* r1){
+uint64_t AMDFUModeDeviceGetECID(void* r1){
 
 	return MobileDevice().AMDFUModeDeviceGetECID(r1);
 }
@@ -819,7 +818,7 @@ void* AMRestorableDeviceCreateFromAMDevice(void* r1){
 
 	return MobileDevice().AMRestorableDeviceCreateFromAMDevice(r1);
 }
-unsigned __int16 AMRestorableDeviceGetProductID(void* r1){
+uint16_t AMRestorableDeviceGetProductID(void* r1){
 
 	return MobileDevice().AMRestorableDeviceGetProductID(r1);
 }
@@ -831,7 +830,7 @@ unsigned long AMRestorableDeviceGetChipID(void* r1){
 
 	return MobileDevice().AMRestorableDeviceGetChipID(r1);
 }
-unsigned __int64 AMRestorableDeviceGetECID(void* r1){
+uint64_t AMRestorableDeviceGetECID(void* r1){
 
 	return MobileDevice().AMRestorableDeviceGetECID(r1);
 }
