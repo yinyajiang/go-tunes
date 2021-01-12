@@ -54,8 +54,8 @@ public:
 	FUNC_DEF(CFDataRef, CFDataCreate, CFAllocatorRef, void*, int);
 	FUNC_DEF(bool, CFDictionaryContainsKey, CFDictionaryRef, void*);
 	FUNC_DEF(CFStringRef, CFStringCreateWithCString, CFAllocatorRef, const char *, int);
-	FUNC_DEF(CFStringRef, CFStringCreateWithCharacters, CFAllocatorRef, const UniChar *, int);
-	FUNC_DEF(CFStringRef, CFStringCreateWithCharactersNoCopy, CFAllocatorRef, const UniChar *, int, CFAllocatorRef);
+	FUNC_DEF(CFStringRef, CFStringCreateWithCharacters, CFAllocatorRef, const wchar_t *, int);
+	FUNC_DEF(CFStringRef, CFStringCreateWithCharactersNoCopy, CFAllocatorRef, const wchar_t *, int, CFAllocatorRef);
 	FUNC_DEF(int, CFStringGetLength, CFStringRef);
 	FUNC_DEF(CFURLRef, CFURLCreateWithFileSystemPath, CFAllocatorRef, CFStringRef, CFURLPathStyle, int);
 	FUNC_DEF(CFReadStreamRef, CFReadStreamCreateWithFile, CFAllocatorRef, CFURLRef);
@@ -63,7 +63,7 @@ public:
 	FUNC_DEF(void, CFReadStreamClose, CFReadStreamRef);
 	FUNC_DEF(CFPropertyListRef, CFPropertyListCreateWithStream, CFAllocatorRef, CFReadStreamRef, CFIndex, int, void *, CFStringRef *);
 	FUNC_DEF(CFMutableDataRef, CFDataCreateMutable, CFAllocatorRef, CFIndex);
-	FUNC_DEF(void, CFDataAppendBytes, CFMutableDataRef, const UInt8 *, CFIndex);
+	FUNC_DEF(void, CFDataAppendBytes, CFMutableDataRef, const uint8_t *, CFIndex);
 	FUNC_DEF(CFTypeID, CFGetTypeID, CFTypeRef);
 	FUNC_DEF(CFPropertyListRef, CFPropertyListCreateWithData, CFAllocatorRef, CFMutableDataRef, int, void *, CFStringRef *);
 	FUNC_DEF(CFPropertyListRef, CFPropertyListCreateFromXMLData, CFAllocatorRef, CFDataRef, int, CFStringRef *);
@@ -75,7 +75,7 @@ public:
 	FUNC_DEF(int, CFStringGetSystemEncoding);
 	FUNC_DEF(const char *, CFStringGetCStringPtr, CFStringRef, CFStringEncoding);
 	FUNC_DEF(int, CFStringGetCString, CFStringRef, char *, int, CFStringEncoding);
-	FUNC_DEF(int, CFStringGetBytes, CFStringRef, CFRange, CFStringEncoding, UInt8, bool, UInt8 *, CFIndex, CFIndex *);
+	FUNC_DEF(int, CFStringGetBytes, CFStringRef, CFRange, CFStringEncoding, uint8_t, bool, uint8_t *, CFIndex, CFIndex *);
 	FUNC_DEF(CFDataRef, CFPropertyListCreateData, CFAllocatorRef, CFPropertyListRef, int, int, void **);
 	FUNC_DEF(int, CFURLWriteDataAndPropertiesToResource, CFURLRef, CFDataRef, CFDictionaryRef, int *);
 	FUNC_DEF(int, CFDictionaryGetCount, CFDictionaryRef);
@@ -131,7 +131,7 @@ public:
 	FUNC_DEF(CFBundleRef, CFBundleGetMainBundle);
 	FUNC_DEF(CFURLRef, CFBundleCopyBundleURL, CFBundleRef);
 	FUNC_DEF(CFURLRef, CFURLCreateCopyDeletingLastPathComponent, CFAllocatorRef, CFURLRef);
-	FUNC_DEF(void*, CFURLGetFileSystemRepresentation, CFURLRef, void*, UInt8 *, CFIndex);
+	FUNC_DEF(void*, CFURLGetFileSystemRepresentation, CFURLRef, void*, uint8_t *, CFIndex);
 #endif
 private:
 	HMODULE m_hDll = 0;

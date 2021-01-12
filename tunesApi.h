@@ -44,8 +44,8 @@ void					CFArrayAppendValue(CFMutableArrayRef, void*);
 CFDataRef				CFDataCreate(CFAllocatorRef, void*, int);
 bool					CFDictionaryContainsKey(CFDictionaryRef, void*);
 CFStringRef				CFStringCreateWithCString(CFAllocatorRef, const char *, int);
-CFStringRef				CFStringCreateWithCharacters(CFAllocatorRef, const UniChar *, int);
-CFStringRef				CFStringCreateWithCharactersNoCopy(CFAllocatorRef, const UniChar *, int, CFAllocatorRef);
+CFStringRef				CFStringCreateWithCharacters(CFAllocatorRef, const wchar_t *, int);
+CFStringRef				CFStringCreateWithCharactersNoCopy(CFAllocatorRef, const wchar_t *, int, CFAllocatorRef);
 int						CFStringGetLength(CFStringRef);
 CFURLRef				CFURLCreateWithFileSystemPath(CFAllocatorRef, CFStringRef, CFURLPathStyle, int);
 CFReadStreamRef			CFReadStreamCreateWithFile(CFAllocatorRef, CFURLRef);
@@ -53,7 +53,7 @@ int						CFReadStreamOpen(CFReadStreamRef);
 void					CFReadStreamClose(CFReadStreamRef);
 CFPropertyListRef		CFPropertyListCreateWithStream(CFAllocatorRef, CFReadStreamRef, CFIndex, int, void *, CFStringRef *);
 CFMutableDataRef		CFDataCreateMutable(CFAllocatorRef, CFIndex);
-void					CFDataAppendBytes(CFMutableDataRef, const UInt8 *, CFIndex);
+void					CFDataAppendBytes(CFMutableDataRef, const uint8_t *, CFIndex);
 CFTypeID				CFGetTypeID(CFTypeRef);
 CFPropertyListRef		CFPropertyListCreateWithData(CFAllocatorRef, CFMutableDataRef, int, void *, CFStringRef *);
 CFPropertyListRef		CFPropertyListCreateFromXMLData(CFAllocatorRef, CFDataRef, int, CFStringRef *);
@@ -65,7 +65,7 @@ int						CFNumberGetValue(CFNumberRef, CFNumberType, void *);
 int						CFStringGetSystemEncoding();
 const char *			CFStringGetCStringPtr(CFStringRef, CFStringEncoding);
 int						CFStringGetCString(CFStringRef, char *, int, CFStringEncoding);
-int						CFStringGetBytes(CFStringRef, CFRange, CFStringEncoding, UInt8, bool, UInt8 *, CFIndex, CFIndex *);
+int						CFStringGetBytes(CFStringRef, CFRange, CFStringEncoding, uint8_t, bool, uint8_t *, CFIndex, CFIndex *);
 CFDataRef				CFPropertyListCreateData(CFAllocatorRef, CFPropertyListRef, int, int, void **);
 int						CFURLWriteDataAndPropertiesToResource(CFURLRef, CFDataRef, CFDictionaryRef, int *);
 int						CFDictionaryGetCount(CFDictionaryRef);
@@ -120,7 +120,7 @@ CFStringRef				CFStringCreateWithFormat(CFAllocatorRef, CFDictionaryRef, CFStrin
 CFBundleRef				CFBundleGetMainBundle();
 CFURLRef				CFBundleCopyBundleURL(CFBundleRef);
 CFURLRef				CFURLCreateCopyDeletingLastPathComponent(CFAllocatorRef, CFURLRef);
-void*					CFURLGetFileSystemRepresentation(CFURLRef, void*, UInt8 *, CFIndex);
+void*					CFURLGetFileSystemRepresentation(CFURLRef, void*, uint8_t *, CFIndex);
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

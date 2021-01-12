@@ -174,12 +174,12 @@ CFStringRef CFStringCreateWithCString(CFAllocatorRef r1, const char * r2, int r3
 	return CoreFoundation().CFStringCreateWithCString(r1, r2, r3);
 }
 
-CFStringRef CFStringCreateWithCharacters(CFAllocatorRef r1, const UniChar * r2, int r3)
+CFStringRef CFStringCreateWithCharacters(CFAllocatorRef r1, const wchar_t * r2, int r3)
 {
 	return CoreFoundation().CFStringCreateWithCharacters(r1, r2, r3);
 }
 
-CFStringRef CFStringCreateWithCharactersNoCopy(CFAllocatorRef r1, const UniChar * r2, int r3, CFAllocatorRef r4)
+CFStringRef CFStringCreateWithCharactersNoCopy(CFAllocatorRef r1, const wchar_t * r2, int r3, CFAllocatorRef r4)
 {
 	return CoreFoundation().CFStringCreateWithCharactersNoCopy(r1, r2, r3, r4);
 }
@@ -217,7 +217,7 @@ CFMutableDataRef CFDataCreateMutable(CFAllocatorRef r1, CFIndex r2)
 {
 	return CoreFoundation().CFDataCreateMutable(r1, r2);
 }
-void CFDataAppendBytes(CFMutableDataRef r1, const UInt8 * r2, CFIndex r3)
+void CFDataAppendBytes(CFMutableDataRef r1, const uint8_t * r2, CFIndex r3)
 {
 	 CoreFoundation().CFDataAppendBytes(r1, r2, r3);
 }
@@ -265,7 +265,7 @@ int CFStringGetCString(CFStringRef r1, char * r2, int r3, CFStringEncoding r4)
 {
 	return CoreFoundation().CFStringGetCString(r1, r2, r3, r4);
 }
-int CFStringGetBytes(CFStringRef r1, CFRange r2, CFStringEncoding r3, UInt8 r4, bool r5, UInt8 * r6, CFIndex r7, CFIndex * r8)
+int CFStringGetBytes(CFStringRef r1, CFRange r2, CFStringEncoding r3, uint8_t r4, bool r5, uint8_t * r6, CFIndex r7, CFIndex * r8)
 {
 	return CoreFoundation().CFStringGetBytes(r1, r2, r3, r4, r5, r6, r7, r8);
 }
@@ -490,7 +490,7 @@ CFURLRef CFURLCreateCopyDeletingLastPathComponent(CFAllocatorRef r1, CFURLRef r2
 {
 	return CoreFoundation().CFURLCreateCopyDeletingLastPathComponent(r1, r2);
 }
-void* CFURLGetFileSystemRepresentation(CFURLRef r1, void* r2, UInt8 * r3, CFIndex r4)
+void* CFURLGetFileSystemRepresentation(CFURLRef r1, void* r2, uint8_t * r3, CFIndex r4)
 {
 	return CoreFoundation().CFURLGetFileSystemRepresentation(r1, r2, r3, r4);
 }

@@ -48,7 +48,7 @@ extern "C"{
 	};
 
 	struct CFGregorianDate {
-		int year;
+		int32_t year;
 		int8_t month;
 		int8_t day;
 		int8_t hour;

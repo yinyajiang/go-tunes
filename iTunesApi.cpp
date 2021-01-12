@@ -189,9 +189,13 @@ CMobileDevice::CMobileDevice(bool newdll)
 {
 #ifdef WIN32
 	if (newdll)
+	{
 		m_hDll = DLOPEN(L"MobileDevice.dll");
-	else
+	}
+	else {
 		m_hDll = DLOPEN(L"iTunesMobileDevice.dll");
+	}
+
 	if (NULL == m_hDll)
 		MessageBoxA(NULL, "MobileDevice.dll load fail", "error", 0);
 #else
