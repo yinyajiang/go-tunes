@@ -1,6 +1,6 @@
 #pragma once
 #ifndef WIN32
-#include <CoreFoundation/CoreFoundation.h>
+#include <CoreFoundation/CFRunLoop.h>
 #endif
 #include "unkonwStruct.h"
 #ifdef __cplusplus

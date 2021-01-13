@@ -13,11 +13,15 @@
 									}
 #define DIRECZT_LOAD(func) 			FUNC_LOAD(func)
 #else
-#include <dlfcn.h>
-#define DLOPEN(path) 			    dlopen(path,RTLD_NOW);
-#define DLFREE(h)				    if (h) dlclose(h);
+CFBundleRef DLOPEN(const char* path){
+	CFStringRef dllPath = ::CFStringCreateWithCString(NULL, path,::kCFStringEncodingUTF8);
+	CFURLRef pURLRef = ::CFURLCreateWithFileSystemPath(0, dllPath, kCFURLPOSIXPathStyle, 0);
+	CFBundleRef hDll = ::CFBundleCreate(::kCFAllocatorDefault, pURLRef);
+	return hDll;
+}
+#define DLFREE(h)				    if (h) h = NULL;
 #define DIRECZT_LOAD(func)			this->func = (PF_##func)::func;
-#define FUNC_LOAD(func)				this->func = (PF_##func)dlsym(m_hDll,#func);
+#define FUNC_LOAD(func)				this->func = (PF_##func)::CFBundleGetFunctionPointerForName(m_hDll, ::CFStringCreateWithCString(NULL, #func,::kCFStringEncodingUTF8));
 #define VALUE_LOAD(func)		    this->func = (PF_##func)(&::func);
 #endif
 
@@ -199,7 +203,7 @@ CMobileDevice::CMobileDevice(bool newdll)
 	if (NULL == m_hDll)
 		MessageBoxA(NULL, "MobileDevice.dll load fail", "error", 0);
 #else
-	m_hDll = DLOPEN("/System/Library/PrivateFrameworks/MobileDevice.framework/MobileDevice");
+	m_hDll = DLOPEN("/System/Library/PrivateFrameworks/MobileDevice.framework");
 	if (NULL == m_hDll)
 		printf("MobileDevice.dll load fail");
 #endif
@@ -348,7 +352,7 @@ CAirTrafficHost::CAirTrafficHost(void)
 	if (NULL == m_hDll)
 		MessageBoxA(NULL, "AirTrafficHost.dll load fail", "error", 0);
 #else
-	m_hDll = DLOPEN("/System/Library/PrivateFrameworks/AirTrafficHost.framework/AirTrafficHost");
+	m_hDll = DLOPEN("/System/Library/PrivateFrameworks/AirTrafficHost.framework");
 	if (NULL == m_hDll)
 		printf("AirTrafficHost load fail");
 #endif

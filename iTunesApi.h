@@ -3,7 +3,7 @@
 #include <windows.h>
 #else
 #include <CoreFoundation/CoreFoundation.h>
-typedef	void* HMODULE;
+typedef	CFBundleRef HMODULE;
 #endif
 #include "unkonwStruct.h"
 #include <string>

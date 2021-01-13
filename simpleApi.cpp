@@ -1,7 +1,4 @@
-#include "tunesApi.h"
-#ifndef WIN32
-#include <CoreFoundation/CoreFoundation.h>
-#endif
+#include "simpleApi.h"
 #include "unkonwStruct.h"
 #include "iTunesApi.h"
 
