@@ -2,10 +2,12 @@ package itunes
 
 import (
 	"encoding/binary"
+	"strconv"
 	"strings"
 	"unsafe"
 
 	"github.com/yinyajiang/go-w32"
+	"github.com/yinyajiang/go-w32/wutil"
 )
 
 func queryReg(path, key string, replacex86 bool) (reg string) {
@@ -52,4 +54,13 @@ func setRegStartup(key string) {
 	buf := make([]byte, unsafe.Sizeof(uint64(0)), unsafe.Sizeof(uint64(0)))
 	binary.PutUvarint(buf, 2)
 	w32.RegSetRaw(hSubKey, "State", w32.REG_DWORD, buf[:4])
+}
+
+func installMsi(pkg string) {
+	wutil.StartAdminProcess("msiexec.exe", []string{"/i", `"` + pkg + `"`, "/qn", "/norestart"})
+	w32.WaitForSingleObject(h, w32.INFINITE)
+}
+
+func getSysBit() string {
+	return strconv.Itoa(getSysBit())
 }

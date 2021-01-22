@@ -3,13 +3,9 @@ package itunes
 import (
 	"fmt"
 	"runtime"
-	"strconv"
 	"sync"
 	"time"
 
-	"github.com/yinyajiang/go-w32/wutil"
-
-	"github.com/yinyajiang/go-w32"
 	tools "github.com/yinyajiang/go-ytools/utils"
 )
 
@@ -71,12 +67,27 @@ func (i *ITunes) Repair() bool {
 	return !i.IsDamaged()
 }
 
+//Auto ...
+func (i *ITunes) Auto() bool {
+	if i.InstallType == "mac" {
+		return true
+	}
+	if len(i.InstallType) > 0 {
+		if i.IsDamaged() {
+			return i.Repair()
+		}
+		return true
+	}
+
+	return nil == i.Install(nil)
+}
+
 //Install ...
 func (i *ITunes) Install(progFun func(Phase string, Prog float64)) (err error) {
 	if i.InstallType == "mac" {
 		return nil
 	}
-	jurl := tools.FrameConfigValue("iTunesUrl", strconv.Itoa(w32.GetSysBit()))
+	jurl := tools.FrameConfigValue("iTunesUrl", getSysBit())
 	if jurl == nil {
 		return
 	}
@@ -112,8 +123,7 @@ func (i *ITunes) Install(progFun func(Phase string, Prog float64)) (err error) {
 			return
 		}
 		for _, pkg := range pkgs {
-			_, h := wutil.StartAdminProcess("msiexec.exe", []string{"/i", `"` + pkg + `"`, "/qn", "/norestart"})
-			w32.WaitForSingleObject(h, w32.INFINITE)
+			installMsi(pkg)
 		}
 	}()
 	go func() {

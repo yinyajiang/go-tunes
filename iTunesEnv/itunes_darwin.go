@@ -16,7 +16,7 @@ func version() (ver string) {
 	p := plist.NewDecoder(f)
 	stver := struct {
 		ShortVersionString string `plist:"CFBundleShortVersionString"`
-		Version            uint64 `plist:"CFBundleVersion"`
+		Version            string `plist:"CFBundleVersion"`
 	}{}
 	p.Decode(&stver)
 	if len(stver.Version) > 0 {
@@ -51,9 +51,15 @@ func startWin32Service() {}
 
 func startUWPService() {}
 
-func isInstallWin32() bool{
+func isInstallWin32() bool {
 	return false
 }
 func isInstallUWP() bool {
 	return false
+}
+
+func installMsi(pkg string) {}
+
+func getSysBit() string {
+	return "64"
 }
