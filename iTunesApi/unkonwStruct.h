@@ -39,6 +39,7 @@ extern "C"{
 	typedef int                 CFStringEncoding;
 	typedef int                 CFURLPathStyle;     // posix=0, hfs=1, windows=2
 	typedef void *              CFBundleRef;
+	typedef void *				CFRunLoopRef;
 	typedef double              CFAbsoluteTime;
 	typedef double              CFTimeInterval;
 #ifdef WIN32

@@ -21,6 +21,14 @@ void	CFRunLoopRun()
 	CoreFoundation().CFRunLoopRun();
 }
 
+void   CFRunLoopStop(CFRunLoopRef){
+
+}
+CFRunLoopRef    CFRunLoopGetCurrent(){
+	return 0;
+}
+
+
 CFStringRef __CFStringMakeConstantString(const char *r1)
 {
 	return CoreFoundation().__CFStringMakeConstantString(r1);

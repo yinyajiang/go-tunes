@@ -13,6 +13,8 @@ extern "C" {
 //CoreFoundation.dll
 #ifdef WIN32
 void					CFRunLoopRun();
+CFRunLoopRef            CFRunLoopGetCurrent();//not used in windows
+void                    CFRunLoopStop(CFRunLoopRef);//not used in windows
 CFStringRef				__CFStringMakeConstantString(const char *);
 void					CFRelease(CFTypeRef);
 void*					kCFAllocatorDefault();
