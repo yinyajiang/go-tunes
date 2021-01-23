@@ -155,7 +155,7 @@ func isLowerVersion(modelName, model, iosver, itunesver, mobilever string) bool 
 
 	highIosVer := tools.CmpVersion(iosver, "13.6") >= 0
 	newDevice := tools.CmpVersion(model, cmpdev) > 0
-	if !highIosVer && 0 != len(iosver) && !newDevice {
+	if !highIosVer && !newDevice {
 		return false
 	}
 
