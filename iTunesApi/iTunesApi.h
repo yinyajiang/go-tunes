@@ -33,7 +33,7 @@ public:
 	FUNC_DEF(void, kCFNumberPositiveInfinity);
 	FUNC_DEF(void, kCFTypeDictionaryKeyCallBacks);
 	FUNC_DEF(void, kCFTypeDictionaryValueCallBacks);
-	FUNC_DEF(CFMutableDictionaryRef, CFDictionaryCreateMutable, int, int, void*, void*);
+	FUNC_DEF(CFMutableDictionaryRef, CFDictionaryCreateMutable, void*, void*, void*, void*);
 	FUNC_DEF(CFMutableDictionaryRef, CFDictionaryCreateMutableCopy, CFAllocatorRef, CFIndex, CFDictionaryRef);
 	FUNC_DEF(CFDictionaryRef, CFDictionaryCreate, CFAllocatorRef, void*, void*, int, void*, void*);
 	FUNC_DEF(CFDataRef, CFPropertyListCreateXMLData, CFAllocatorRef, CFPropertyListRef);
@@ -42,8 +42,8 @@ public:
 	FUNC_DEF(CFMutableArrayRef, CFArrayCreateMutable, CFAllocatorRef, int, void*);
 	FUNC_DEF(CFMutableArrayRef, CFArrayCreateMutableCopy, CFAllocatorRef, CFIndex, CFArrayRef);
 	FUNC_DEF(void, CFArrayAppendArray, CFMutableArrayRef, CFArrayRef, CFRange);
-	FUNC_DEF(void, CFDictionarySetValue, CFDictionaryRef, void*, void*);
-	FUNC_DEF(void, CFDictionaryAddValue, CFDictionaryRef, void*, void*);
+	FUNC_DEF(void, CFDictionarySetValue, CFMutableDictionaryRef, void*, void*);
+	FUNC_DEF(void, CFDictionaryAddValue, CFMutableDictionaryRef, void*, void*);
 	FUNC_DEF(void*, CFDictionaryGetValue, CFDictionaryRef, CFStringRef);
 	FUNC_DEF(int, CFArrayGetCount, CFArrayRef);
 	FUNC_DEF(void*, CFArrayGetValueAtIndex, CFArrayRef, int);

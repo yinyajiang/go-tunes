@@ -477,3 +477,4 @@ Makefile.Release
 go-tunes.exe
 frameConfig.json
 iTunesApi/iTunesApi
+go-tunes

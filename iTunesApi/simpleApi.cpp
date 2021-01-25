@@ -13,6 +13,7 @@ void AddLoadDir(wchar_t* dir)
 #endif
 }
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //CoreFoundation.dll
 #ifdef WIN32
@@ -74,7 +75,7 @@ void*		kCFTypeDictionaryValueCallBacks()
 	return (void*)CoreFoundation().kCFTypeDictionaryValueCallBacks;
 }
 
-CFMutableDictionaryRef CFDictionaryCreateMutable(int r1, int r2, void* r3, void* r4)
+CFMutableDictionaryRef CFDictionaryCreateMutable(void* r1, void* r2, void* r3, void* r4)
 {
 	return CoreFoundation().CFDictionaryCreateMutable(r1, r2, r3, r4);
 }
@@ -119,12 +120,12 @@ void CFArrayAppendArray(CFMutableArrayRef r1, CFArrayRef r2, CFRange r3)
 	 CoreFoundation().CFArrayAppendArray(r1, r2, r3);
 }
 
-void CFDictionarySetValue(CFDictionaryRef r1, void* r2, void* r3)
+void CFDictionarySetValue(CFMutableDictionaryRef r1, void* r2, void* r3)
 {
 	 CoreFoundation().CFDictionarySetValue(r1, r2, r3);
 }
 
-void CFDictionaryAddValue(CFDictionaryRef r1, void* r2, void* r3)
+void CFDictionaryAddValue(CFMutableDictionaryRef r1, void* r2, void* r3)
 {
 	 CoreFoundation().CFDictionaryAddValue(r1, r2, r3);
 }

@@ -6,8 +6,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+typedef void**  PPV;
 
-
+///////////////helper////////////
+void*                   MyPlistToCF(void*,int);
+void*                   MyCFToPlist(void*,int*);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //CoreFoundation.dll
@@ -25,7 +28,7 @@ void*					kCFNumberPositiveInfinity();
 void*					kCFTypeDictionaryKeyCallBacks();
 void*					kCFTypeDictionaryValueCallBacks();
 
-CFMutableDictionaryRef  CFDictionaryCreateMutable(int, int, void*, void*);
+CFMutableDictionaryRef  CFDictionaryCreateMutable(void*, void*, void*, void*);
 CFMutableDictionaryRef  CFDictionaryCreateMutableCopy(CFAllocatorRef, CFIndex, CFDictionaryRef);
 CFDictionaryRef		    CFDictionaryCreate(CFAllocatorRef, void*, void*, int, void*, void*);
 CFDataRef			    CFPropertyListCreateXMLData(CFAllocatorRef, CFPropertyListRef);
@@ -34,8 +37,8 @@ void*					CFDataGetBytePtr(CFDataRef);
 CFMutableArrayRef		CFArrayCreateMutable(CFAllocatorRef, int, void*);
 CFMutableArrayRef		CFArrayCreateMutableCopy(CFAllocatorRef, CFIndex, CFArrayRef);
 void					CFArrayAppendArray( CFMutableArrayRef, CFArrayRef, CFRange);
-void					CFDictionarySetValue(CFDictionaryRef, void*, void*);
-void					CFDictionaryAddValue(CFDictionaryRef, void*, void*);
+void					CFDictionarySetValue(CFMutableDictionaryRef, void*, void*);
+void					CFDictionaryAddValue(CFMutableDictionaryRef, void*, void*);
 void*					CFDictionaryGetValue(CFDictionaryRef, CFStringRef);
 int						CFArrayGetCount(CFArrayRef);
 void*					CFArrayGetValueAtIndex(CFArrayRef, int);
@@ -132,12 +135,12 @@ int						AMSUnregisterTarget(void*);
 int						AMDServiceConnectionInvalidate(void*);
 
 int						AFCConnectionClose(void*);
-int						AFCDeviceInfoOpen(void*, void**);
-int						AFCFileInfoOpen(void*, void*, void**);
-int						AFCKeyValueRead(void*, void**, void**);
+int						AFCDeviceInfoOpen(void*, PPV);
+int						AFCFileInfoOpen(void*, void*, PPV);
+int						AFCKeyValueRead(void*, PPV, PPV);
 int						AFCKeyValueClose(void*);
-int						AFCDirectoryOpen(void*, void*, void**);
-int						AFCDirectoryRead(void*, void*, void**);
+int						AFCDirectoryOpen(void*, void*, PPV);
+int						AFCDirectoryRead(void*, void*, PPV);
 int						AFCDirectoryClose(void*, void*);
 int						AFCDirectoryCreate(void*, void*);
 int						AFCRemovePath(void*, void*);
@@ -148,20 +151,20 @@ int						AFCFileRefWrite(void*, unsigned long long, void*, int);
 int						AFCFileRefClose(void*, unsigned long long);
 int						AFCFileRefSeek(void*, unsigned long long, unsigned long long, unsigned long);
 int						AFCFileRefTell(void*, unsigned long long, unsigned long *);
-int						AFCConnectionOpen(void*, int, void**);
+int						AFCConnectionOpen(void*, int, PPV);
 int						AFCConnectionGetContext(void*);
 int						AFCConnectionGetFSBlockSize(void*);
 int						AFCConnectionGetIOTimeout(void*);
 int						AFCConnectionGetSocketBlockSize(void*);
 
 
-int						AMDeviceLookupApplications(void*, void*, void**);
+int						AMDeviceLookupApplications(void*, void*, PPV);
 int						AMDeviceStartHouseArrestService(void*, void*, void*, void*, void*);
 int						AMDeviceInstallApplication(void*, CFStringRef, void *, void *, void *);
 int						AMDeviceUninstallApplication(void*, CFStringRef, void *, void *, void *);
 int						AMDeviceRemoveApplicationArchive(void*, CFStringRef, void *, void *, void *);
 int						AMDeviceArchiveApplication(void*, CFStringRef, void *, void *, void *);
-int						AMDeviceNotificationSubscribe(void*, int, int, int, void**);
+int						AMDeviceNotificationSubscribe(void*, int, int, int, PPV);
 int						AMDeviceNotificationUnsubscribe(void*);
 int						AMDeviceRelease(void*);
 int						AMDeviceConnect(void*);
@@ -171,8 +174,8 @@ int						AMDeviceValidatePairing(void*);
 int						AMDevicePair(void*);
 int						AMDeviceUnpair(void*);
 int						AMDeviceStartSession(void*);
-int						AMDeviceSecureStartService(void*, void*, void*, void**);
-int						AMDeviceStartService(void*, void*, void**, void*);
+int						AMDeviceSecureStartService(void*, void*, void*, PPV);
+int						AMDeviceStartService(void*, void*, PPV, void*);
 int						AMDeviceStopSession(void*);
 int						AMDeviceSetValue(void*, void*, void*, void*);
 void*					AMDeviceCopyDeviceIdentifier(void*);
@@ -197,7 +200,7 @@ int						AMRestoreDisableFileLogging();
 void*					AMRestoreCreateDefaultOptions(void*);
 int						AMRestorePerformRestoreModeRestore(void*, void*, void*, void*);
 void*					AMRestoreModeDeviceCreate(int, int, int);
-int						AMRestoreCreatePathsForBundle(void*, void*, void*, int, void**, void**, int, void**);
+int						AMRestoreCreatePathsForBundle(void*, void*, void*, int, PPV, PPV, int, PPV);
 unsigned long			AMRestoreModeDeviceGetTypeID(void*);
 void*					AMRestoreModeDeviceCopySerialNumber(void*);
 
@@ -241,7 +244,7 @@ unsigned long			AMRestorableDeviceGetBoardID(void*);
 void*					AMRestorableDeviceCopySerialNumber(void*);
 
 int						AMDShutdownNotificationProxy(void*);
-int						USBMuxListenerCreate(void*, void**);
+int						USBMuxListenerCreate(void*, PPV);
 int						USBMuxListenerHandleData(void*);
 int						AMDObserveNotification(void*, void*);
 int						AMSInitialize();
