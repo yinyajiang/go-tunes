@@ -266,8 +266,11 @@ func AMDeviceCopyValue(modeDevice, v1, v2 uintptr) []byte {
 //MakeCFString ...
 func MakeCFString(str string) uintptr {
 	cstr := C.CString(str)
+	if 0 == uintptr(unsafe.Pointer(cstr)) {
+		return 0
+	}
 	defer C.free(unsafe.Pointer(cstr))
-	return uintptr(unsafe.Pointer(C.CFStringCreateWithCString(0, cstr, C.kCFStringEncodingUTF8)))
+	return uintptr(unsafe.Pointer(C.CFStringCreateWithCString(C.CFAllocatorRef(unsafe.Pointer(uintptr(0))), cstr, C.kCFStringEncodingUTF8)))
 }
 
 //CFToPlist ...

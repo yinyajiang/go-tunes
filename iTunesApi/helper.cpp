@@ -7,7 +7,7 @@
 
 void*       MyPlistToCF(void* buff,int len){
     CFMutableDataRef data = CFDataCreateMutable(NULL, 0);
-	CFDataAppendBytes(data, (const UInt8 *)buff, len);
+	CFDataAppendBytes(data, (UInt8 *)buff, len);
 	void* pMutablelist = (void*)CFPropertyListCreateWithData(NULL, data, 0, 0, 0);
 	return pMutablelist;
 }

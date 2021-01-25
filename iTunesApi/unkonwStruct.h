@@ -44,6 +44,7 @@ extern "C"{
 	typedef double              CFTimeInterval;
 #ifdef WIN32
 	typedef unsigned char		Boolean;
+	typedef uint8_t				UInt8;		
 #endif
 
 	typedef struct _CFRange {
