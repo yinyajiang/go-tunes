@@ -152,7 +152,7 @@ int						AFCFileRefRead(void*, unsigned long long, void*, void*);
 int						AFCFileRefWrite(void*, unsigned long long, void*, int);
 int						AFCFileRefClose(void*, unsigned long long);
 int						AFCFileRefSeek(void*, unsigned long long, unsigned long long, unsigned long);
-int						AFCFileRefTell(void*, unsigned long long, unsigned long *);
+int						AFCFileRefTell(void*, unsigned long long, unsigned long long*);
 int						AFCConnectionOpen(void*, int, PPV);
 int						AFCConnectionGetContext(void*);
 int						AFCConnectionGetFSBlockSize(void*);

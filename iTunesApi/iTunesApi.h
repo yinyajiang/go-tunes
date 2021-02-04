@@ -184,7 +184,7 @@ public:
 	FUNC_DEF(int, AFCFileRefWrite, void*, unsigned long long, void*, int);
 	FUNC_DEF(int, AFCFileRefClose, void*, unsigned long long);
 	FUNC_DEF(int, AFCFileRefSeek, void*, unsigned long long, unsigned long long, unsigned long);
-	FUNC_DEF(int, AFCFileRefTell, void*, unsigned long long, unsigned long *);
+	FUNC_DEF(int, AFCFileRefTell, void*, unsigned long long, unsigned long long*);
 	FUNC_DEF(void*, AMDeviceCopyDeviceIdentifier, void*);
 	FUNC_DEF(void*, AMDeviceCopyValue, void*, void*, void*);
 	FUNC_DEF(int, AMDeviceGetInterfaceType, void*);
