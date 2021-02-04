@@ -22,13 +22,13 @@ CFRunLoopRef            CFRunLoopGetCurrent();//not used in windows
 void                    CFRunLoopStop(CFRunLoopRef);//not used in windows
 CFStringRef				__CFStringMakeConstantString(const char *);
 void					CFRelease(CFTypeRef);
-void*					kCFAllocatorDefault();
-void*					kCFTypeArrayCallBacks();
-void*					kCFBooleanTrue();
-void*					kCFBooleanFalse();
-void*					kCFNumberPositiveInfinity();
-void*					kCFTypeDictionaryKeyCallBacks();
-void*					kCFTypeDictionaryValueCallBacks();
+extern void*			kCFAllocatorDefault;
+extern void*			kCFTypeArrayCallBacks;
+extern void*			kCFBooleanTrue;
+extern void*			kCFBooleanFalse;
+extern void*			kCFNumberPositiveInfinity;
+extern void*			kCFTypeDictionaryKeyCallBacks;
+extern void*			kCFTypeDictionaryValueCallBacks;
 
 CFMutableDictionaryRef  CFDictionaryCreateMutable(void*, void*, void*, void*);
 CFMutableDictionaryRef  CFDictionaryCreateMutableCopy(CFAllocatorRef, CFIndex, CFDictionaryRef);

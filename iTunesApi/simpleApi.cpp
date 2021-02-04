@@ -17,6 +17,31 @@ void AddLoadDir(wchar_t* dir)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //CoreFoundation.dll
 #ifdef WIN32
+
+void*		kCFBooleanTrue;
+void*		kCFBooleanFalse;
+void*		kCFAllocatorDefault;
+void*		kCFTypeArrayCallBacks;
+void*		kCFNumberPositiveInfinity;
+void*		kCFTypeDictionaryKeyCallBacks;
+void*		kCFTypeDictionaryValueCallBacks;
+
+
+struct ForSimpleInit{
+	ForSimpleInit(){
+		kCFBooleanTrue = (void*)CoreFoundation().kCFBooleanTrue;
+		kCFBooleanFalse = (void*)CoreFoundation().kCFBooleanFalse;
+		kCFAllocatorDefault = (void*)CoreFoundation().kCFAllocatorDefault;
+		kCFTypeArrayCallBacks = (void*)CoreFoundation().kCFTypeArrayCallBacks;
+		kCFNumberPositiveInfinity = (void*)CoreFoundation().kCFNumberPositiveInfinity;
+		kCFTypeDictionaryKeyCallBacks = (void*)CoreFoundation().kCFTypeDictionaryKeyCallBacks;
+		kCFTypeDictionaryValueCallBacks=  (void*)CoreFoundation().kCFTypeDictionaryValueCallBacks;
+	}
+};
+static ForSimpleInit forSimpleInit;
+
+
+
 void	CFRunLoopRun()
 {
 	CoreFoundation().CFRunLoopRun();
@@ -38,41 +63,6 @@ CFStringRef __CFStringMakeConstantString(const char *r1)
 void CFRelease(CFTypeRef r1)
 {
 	CoreFoundation().CFRelease(r1);
-}
-
-void*		kCFAllocatorDefault()
-{
-	return (void*)CoreFoundation().kCFAllocatorDefault;
-}
-
-void*		kCFTypeArrayCallBacks()
-{
-	return (void*)CoreFoundation().kCFTypeArrayCallBacks;
-}
-
-void*		kCFBooleanTrue()
-{
-	return (void*)CoreFoundation().kCFBooleanTrue;
-}
-
-void*		kCFBooleanFalse()
-{
-	return (void*)CoreFoundation().kCFBooleanFalse;
-}
-
-void*		kCFNumberPositiveInfinity()
-{
-	return (void*)CoreFoundation().kCFNumberPositiveInfinity;
-}
-
-void*		kCFTypeDictionaryKeyCallBacks()
-{
-	return (void*)CoreFoundation().kCFTypeDictionaryKeyCallBacks;
-}
-
-void*		kCFTypeDictionaryValueCallBacks()
-{
-	return (void*)CoreFoundation().kCFTypeDictionaryValueCallBacks;
 }
 
 CFMutableDictionaryRef CFDictionaryCreateMutable(void* r1, void* r2, void* r3, void* r4)

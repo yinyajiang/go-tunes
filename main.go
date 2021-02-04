@@ -8,7 +8,9 @@ import (
 )
 
 func main() {
-	data := iapi.CFToPlist(iapi.MakeCFBool(false))
+	mb := iapi.MakeCFBool(true)
+	data := iapi.CFToPlist(mb)
+
 	var b bool
 	format, err := mtunes.UnmashalPlist(data, &b)
 	if err != nil {
