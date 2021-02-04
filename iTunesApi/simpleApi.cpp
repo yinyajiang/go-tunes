@@ -1066,7 +1066,7 @@ int ATHostConnectionSendMessage(void* r1, void* r2)
 {
 	return AirTrafficHost().ATHostConnectionSendMessage(r1, r2);
 }
-int ATHostConnectionGetGrappaSessionId(int r1)
+int ATHostConnectionGetGrappaSessionId(void* r1)
 {
 	return AirTrafficHost().ATHostConnectionGetGrappaSessionId(r1);
 }

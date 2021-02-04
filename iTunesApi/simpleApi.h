@@ -13,6 +13,7 @@ typedef void**  PPV;
 ///////////////helper////////////
 void*                   MyPlistToCF(void*,int);
 void*                   MyCFToPlist(void*,int*);
+Boolean                 MyCFDictIsContainsKey(void*,void*);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //CoreFoundation.dll
@@ -286,7 +287,7 @@ void*					ATCFMessageGetName(void*);
 int						ATHostConnectionSendHostInfo(void*, void*);
 int						ATHostConnectionSendSyncRequest(void*, void*, void*, void*);
 int						ATHostConnectionSendMessage(void*, void*);
-int						ATHostConnectionGetGrappaSessionId(int);
+int						ATHostConnectionGetGrappaSessionId(void*);
 void*					ATHostConnectionReadMessage(void*);
 
 

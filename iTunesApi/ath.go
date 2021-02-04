@@ -70,9 +70,66 @@ func ATHostConnectionRelease(athconn uintptr) {
 }
 
 //ATHostConnectionSendPowerAssertion ...
-func ATHostConnectionSendPowerAssertion(athconn uintptr, b bool) {
-	if b {
-		C.ATHostConnectionSendPowerAssertion(unsafe.Pointer(athconn),
-			unsafe.Pointer(C.kCFBooleanTrue))
+func ATHostConnectionSendPowerAssertion(athconn uintptr, b bool) int {
+	return int(C.ATHostConnectionSendPowerAssertion(unsafe.Pointer(athconn),
+		unsafe.Pointer(MakeCFBool(b))))
+}
+
+//ATHostConnectionRetain ...
+func ATHostConnectionRetain(athconn uintptr) int {
+	return int(C.ATHostConnectionRetain(unsafe.Pointer(athconn)))
+}
+
+//ATHostConnectionSendMetadataSyncFinished ...
+func ATHostConnectionSendMetadataSyncFinished(athconn uintptr, plval1, plval2 []byte) int {
+	return int(C.ATHostConnectionSendMetadataSyncFinished(unsafe.Pointer(athconn),
+		unsafe.Pointer(PlistToCF(plval1)),
+		unsafe.Pointer(PlistToCF(plval2))))
+}
+
+//ATHostConnectionSendFileError ...
+func ATHostConnectionSendFileError(athconn uintptr, id, mtype string, val int32) {
+	C.ATHostConnectionSendFileError(unsafe.Pointer(athconn),
+		unsafe.Pointer(MakeCFString(id)),
+		unsafe.Pointer(MakeCFString(mtype)),
+		C.int(val))
+}
+
+//ATHostConnectionSendAssetCompleted ...
+func ATHostConnectionSendAssetCompleted(athconn uintptr, id, mtype, path string) int {
+	return int(C.ATHostConnectionSendAssetCompleted(unsafe.Pointer(athconn),
+		unsafe.Pointer(MakeCFString(id)),
+		unsafe.Pointer(MakeCFString(mtype)),
+		unsafe.Pointer(MakeCFString(path))))
+}
+
+//ATCFMessageGetName ...
+func ATCFMessageGetName(msg uintptr) string {
+	cfname := uintptr(C.ATCFMessageGetName(unsafe.Pointer(msg)))
+	if cfname == 0 {
+		return ""
 	}
+	return CFStringToString(cfname)
+}
+
+//ATHostConnectionSendHostInfo ...
+func ATHostConnectionSendHostInfo(athconn uintptr, plhost []byte) int {
+	return int(C.ATHostConnectionSendHostInfo(unsafe.Pointer(athconn),
+		unsafe.Pointer(PlistToCF(plhost))))
+}
+
+//ATHostConnectionSendMessage ...
+func ATHostConnectionSendMessage(athconn, msg uintptr) int {
+	return int(C.ATHostConnectionSendMessage(unsafe.Pointer(athconn),
+		unsafe.Pointer(msg)))
+}
+
+//ATHostConnectionGetGrappaSessionId ...
+func ATHostConnectionGetGrappaSessionId(athconn uintptr) int32 {
+	return int32(C.ATHostConnectionGetGrappaSessionId(unsafe.Pointer(athconn)))
+}
+
+//ATHostConnectionReadMessage ...
+func ATHostConnectionReadMessage(athconn uintptr) uintptr {
+	return uintptr(C.ATHostConnectionReadMessage(unsafe.Pointer(athconn)))
 }

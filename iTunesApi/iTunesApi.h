@@ -303,7 +303,7 @@ public:
 	FUNC_DEF(int, ATHostConnectionSendHostInfo, void*, void*);
 	FUNC_DEF(int, ATHostConnectionSendSyncRequest, void*, void*, void*, void*);
 	FUNC_DEF(int, ATHostConnectionSendMessage, void*, void*);
-	FUNC_DEF(int, ATHostConnectionGetGrappaSessionId, int);
+	FUNC_DEF(int, ATHostConnectionGetGrappaSessionId, void*);
 	FUNC_DEF(void*, ATHostConnectionReadMessage, void*);
 private:
 	HMODULE m_hDll = 0;

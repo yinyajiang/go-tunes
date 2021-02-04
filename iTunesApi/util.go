@@ -75,6 +75,11 @@ func MakeCFBool(b bool) uintptr {
 }
 
 //CFBoolToBool ...
-func CFBoolToBool(uint uintptr) bool {
-	return uint == uintptr(C.kCFBooleanTrue)
+func CFBoolToBool(cfb uintptr) bool {
+	return cfb == uintptr(C.kCFBooleanTrue)
+}
+
+//CFDictIsContainsKey ...
+func CFDictIsContainsKey(cfdict uintptr, key string) bool {
+	return 1 == int(C.MyCFDictIsContainsKey(unsafe.Pointer(cfdict), unsafe.Pointer(MakeCFString(key))))
 }

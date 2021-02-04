@@ -19,3 +19,8 @@ void* MyCFToPlist(void* buff,int* len){
      *len = CFDataGetLength(xmlData);
      return (void*)CFDataGetBytePtr(xmlData);
 }
+
+
+Boolean   MyCFDictIsContainsKey(void* dict,void* cfkey){
+    return CFDictionaryContainsKey((CFDictionaryRef)dict,(CFStringRef)cfkey);
+}
