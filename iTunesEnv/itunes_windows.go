@@ -133,6 +133,10 @@ func mobileDeviceVersion() (ver string) {
 
 //IsLowerVersion ...
 func isLowerVersion(modelName, model, iosver, itunesver, mobilever string) bool {
+	if !wutil.IsHighWin7Sp1() {
+		return false
+	}
+
 	cmpdev := "iPhone11,1"
 	modelName = strings.ToLower(modelName)
 	if 0 == len(itunesver) {

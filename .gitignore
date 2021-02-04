@@ -478,3 +478,16 @@ go-tunes.exe
 frameConfig.json
 iTunesApi/iTunesApi
 go-tunes
+MobileDevice.dll
+objc.dll
+pthreadVC2.dll
+SQLite3.dll
+zlib1.dll
+icudt62.dll
+libdispatch.dll
+libicuin.dll
+libicuuc.dll
+libxml2.dll
+ASL.dll
+CFNetwork.dll
+CoreFoundation.dll
