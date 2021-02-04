@@ -45,5 +45,4 @@ func PlistToString(data []byte) string {
 		return ""
 	}
 	return string(data)
-
 }

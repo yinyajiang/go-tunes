@@ -652,7 +652,7 @@ int AFCFileRefSeek(void* r1, unsigned long long r2, unsigned long long r3, unsig
 {
 	return MobileDevice().AFCFileRefSeek(r1, r2, r3, r4);
 }
-int AFCFileRefTell(void* r1, unsigned long long r2, unsigned long * r3)
+int AFCFileRefTell(void* r1, unsigned long long r2, unsigned long long * r3)
 {
 	return MobileDevice().AFCFileRefTell(r1, r2, r3);
 }
