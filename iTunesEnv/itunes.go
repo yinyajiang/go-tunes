@@ -1,6 +1,7 @@
 package itunes
 
 import (
+	"context"
 	"fmt"
 	"runtime"
 	"sync"
@@ -79,11 +80,11 @@ func (i *ITunes) Auto() bool {
 		return true
 	}
 
-	return nil == i.Install(nil)
+	return nil == i.Install(context.TODO(), nil)
 }
 
 //Install ...
-func (i *ITunes) Install(progFun func(Phase string, Prog float64)) (err error) {
+func (i *ITunes) Install(ctx context.Context, progFun func(Phase string, Prog float64)) (err error) {
 	if i.InstallType == "mac" {
 		return nil
 	}
@@ -97,7 +98,7 @@ func (i *ITunes) Install(progFun func(Phase string, Prog float64)) (err error) {
 	}
 
 	path := tools.TempPath("itunes/" + tools.PathName(url))
-	err = tools.DownFileFun(url, path, func(total int64, prog float64) {
+	err = tools.DownFileFun(ctx, url, path, func(total int64, prog float64) {
 		if nil != progFun {
 			progFun("download", prog)
 		}
@@ -113,7 +114,7 @@ func (i *ITunes) Install(progFun func(Phase string, Prog float64)) (err error) {
 		defer func() { installFinish = true }()
 		depath := tools.AbsJoinPath(tools.AbsParent(path), "unzip")
 		tools.RemovePath(depath)
-		err = tools.DeCompressFun(path, depath, nil)
+		err = tools.DeCompressFun(ctx, path, depath, nil)
 		if err != nil {
 			return
 		}

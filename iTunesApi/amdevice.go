@@ -11,7 +11,6 @@ extern void restoreDeviceNotify(struct am_restore_device* pDevice, int nMode);
 import "C"
 import (
 	"context"
-	"runtime"
 	"sync"
 	"unsafe"
 )
@@ -19,10 +18,10 @@ import (
 type NotificationHander func(even, mode string, modeDevice, restorableDevice uintptr)
 
 var (
-	mutex            sync.Mutex
-	registedHandle   []NotificationHander
-	loopCancleForWin context.CancelFunc
-	mainLoopThread   uintptr
+	mutex          sync.Mutex
+	registedHandle []NotificationHander
+	loopCancle     context.CancelFunc
+	//mainLoopThreadMac uintptr
 )
 
 //AMRestorableDeviceRegisterForNotificationsForDevices ...
@@ -78,34 +77,39 @@ func restoreDeviceNotify(device *C.struct_am_restore_device, even C.int) {
 
 //RunLoopRun ...
 func RunLoopRun() {
-	if runtime.GOOS != "windows" {
-		runtime.LockOSThread()
-		mainLoopThread = uintptr(C.CFRunLoopGetCurrent())
-		C.CFRunLoopRun()
-	} else {
-		if loopCancleForWin != nil {
-			return
+	/*
+		if runtime.GOOS != "windows" {
+			runtime.LockOSThread()
+			mainLoopThreadMac = uintptr(C.CFRunLoopGetCurrent())
+			C.CFRunLoopRun()
 		}
-		var contextForWin context.Context
-		contextForWin, loopCancleForWin = context.WithCancel(context.Background())
-		select {
-		case <-contextForWin.Done():
-		}
+	*/
+
+	if loopCancle != nil {
+		return
 	}
+	var contextForWin context.Context
+	contextForWin, loopCancle = context.WithCancel(context.Background())
+	select {
+	case <-contextForWin.Done():
+	}
+
 }
 
 //RunLoopStop ...
 func RunLoopStop() {
-	if runtime.GOOS != "windows" {
-		if 0 != mainLoopThread {
-			C.CFRunLoopStop(C.CFRunLoopRef(mainLoopThread))
+	/*
+		if runtime.GOOS != "windows" {
+			if 0 != mainLoopThreadMac {
+				C.CFRunLoopStop(C.CFRunLoopRef(mainLoopThreadMac))
+			}
 		}
-	} else {
-		if loopCancleForWin != nil {
-			loopCancleForWin()
-			loopCancleForWin = nil
-		}
+	*/
+	if loopCancle != nil {
+		loopCancle()
+		loopCancle = nil
 	}
+
 }
 
 //AMRestorableDeviceGetECID ...
@@ -142,6 +146,11 @@ func AMDeviceStartService(modeldev uintptr, name string) (connect uintptr) {
 		C.PPV(unsafe.Pointer(&connect)),
 		unsafe.Pointer(&nUnknown))
 	return
+}
+
+//AMDServiceConnectionInvalidate ...
+func AMDServiceConnectionInvalidate(connect uintptr) int {
+	return int(C.AMDServiceConnectionInvalidate(unsafe.Pointer(connect)))
 }
 
 //AMDObserveNotification ...

@@ -1,6 +1,8 @@
 package itunes
 
 import (
+	"context"
+
 	tools "github.com/yinyajiang/go-ytools/utils"
 )
 
@@ -32,7 +34,7 @@ func copyElem(elems []Elem) {
 			}
 			for _, file := range files {
 				if !tools.IsInFilter(file, elem.Exclues) {
-					tools.CopyFile(file, tools.ThePath(elem.DstDir, tools.PathName(file)))
+					tools.CopyFile(context.TODO(), file, tools.ThePath(elem.DstDir, tools.PathName(file)))
 				}
 			}
 		}

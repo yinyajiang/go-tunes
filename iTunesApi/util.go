@@ -83,3 +83,8 @@ func CFBoolToBool(cfb uintptr) bool {
 func CFDictIsContainsKey(cfdict uintptr, key string) bool {
 	return 1 == int(C.MyCFDictIsContainsKey(unsafe.Pointer(cfdict), unsafe.Pointer(MakeCFString(key))))
 }
+
+//CFRelease ...
+func CFRelease(cf uintptr) {
+	C.CFRelease(C.CFTypeRef(unsafe.Pointer(cf)))
+}

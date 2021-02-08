@@ -27,12 +27,6 @@ func SubscriptionDeviceNotify() (subChan <-chan *NotifyEvent) {
 	return subscription(true)
 }
 
-//SubscriptionForWaitOperatior ...
-func SubscriptionForWaitOperatior() {
-	subscription(false)
-	return
-}
-
 //RunEventLoop ...
 func RunEventLoop() {
 	iapi.RunLoopRun()
@@ -41,6 +35,17 @@ func RunEventLoop() {
 //StopEventLoop ...
 func StopEventLoop() {
 	iapi.RunLoopStop()
+}
+
+//OnceEventLoopForWaitDevice 为指定设备启动一次事件循环
+func OnceEventLoopForWaitDevice(ctx context.Context, id string) (dev IOSDevice) {
+	subscription(false)
+	go func() {
+		dev = WaitForDevice(ctx, id)
+		StopEventLoop()
+	}()
+	RunEventLoop()
+	return
 }
 
 //UnsubscriptionDeviceNotify ..

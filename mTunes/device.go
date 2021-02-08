@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	iapi "github.com/yinyajiang/go-tunes/iTunesApi"
@@ -16,6 +17,10 @@ type IOSDeviceImpl struct {
 	originalDevice uintptr
 	info           map[string]interface{}
 	buildSession   bool
+	connected      bool
+
+	userLock sync.RWMutex
+	userData map[string]interface{}
 }
 
 //NewIOSDevice ...
@@ -39,6 +44,72 @@ func NewIOSDevice(mode string, modeDevice, originalDevice uintptr) IOSDevice {
 		}
 	}
 	return dev
+}
+
+//SaveUserData ...
+func (dev *IOSDeviceImpl) SaveUserData(key string, val interface{}) {
+	dev.userLock.Lock()
+	defer dev.userLock.Unlock()
+	if dev.userData == nil {
+		dev.userData = make(map[string]interface{}, 2)
+	}
+	dev.userData[key] = val
+}
+
+//GetUserData ...
+func (dev *IOSDeviceImpl) GetUserData(key string) interface{} {
+	dev.userLock.RLock()
+	defer dev.userLock.RUnlock()
+	if dev.userData == nil {
+		return nil
+	}
+	return dev.userData[key]
+}
+
+//DeleteUserData ...
+func (dev *IOSDeviceImpl) DeleteUserData(key string) {
+	dev.userLock.Lock()
+	defer dev.userLock.Unlock()
+	if dev.userData == nil {
+		return
+	}
+	delete(dev.userData, key)
+}
+
+//GetStartService ...
+func (dev *IOSDeviceImpl) GetStartService(name string) (conn uintptr, err error) {
+	if !dev.IsTrusted() {
+		err = fmt.Errorf("Device Not device")
+		return
+	}
+
+	conn, ok := dev.GetUserData(name + "_conn").(uintptr)
+	if ok {
+		return
+	}
+
+	conn = iapi.AMDeviceStartService(dev.ModeDevice(), name)
+	if 0 == conn {
+		err = fmt.Errorf("Start %s service fail", name)
+		return
+	}
+	dev.SaveUserData(name+"_conn", conn)
+	return
+}
+
+//IsServiceRuning ...
+func (dev *IOSDeviceImpl) IsServiceRuning(name string) bool {
+	_, ok := dev.GetUserData(name + "_conn").(uintptr)
+	return ok
+}
+
+//StopService ...
+func (dev *IOSDeviceImpl) StopService(name string) {
+	conn, ok := dev.GetUserData(name + "_conn").(uintptr)
+	if ok {
+		iapi.AMDServiceConnectionInvalidate(conn)
+
+	}
 }
 
 //Mode ...
@@ -130,11 +201,11 @@ func (dev *IOSDeviceImpl) Trust() (err error) {
 
 	dis = false
 
-	connection := iapi.AMDeviceStartService(dev.ModeDevice(), "com.apple.mobile.notification_proxy")
-	if connection == 0 {
-		return fmt.Errorf("AMDeviceStartService notification_proxy fail")
+	connection, _ := dev.GetStartService("com.apple.mobile.notification_proxy")
+	if connection != 0 {
+		fmt.Println("AMDeviceStartService notification_proxy fail")
+		iapi.AMDObserveNotification(connection, "com.apple.itunes-client.syncCancelRequest")
 	}
-	iapi.AMDObserveNotification(connection, "com.apple.itunes-client.syncCancelRequest")
 
 	dev.buildSession = true
 
@@ -265,16 +336,24 @@ func (dev *IOSDeviceImpl) connect() error {
 	if "normal" != dev.Mode() {
 		return fmt.Errorf("Connect not normal device")
 	}
+	if dev.connected {
+		return nil
+	}
 	if 0 != iapi.AMDeviceConnect(dev.ModeDevice()) {
 		return fmt.Errorf("Connect normal device fail")
 	}
+	dev.connected = true
 	return nil
 }
 
 //Disconnect ...
 func (dev *IOSDeviceImpl) disconnect() {
+	if !dev.connected {
+		return
+	}
 	if "normal" != dev.Mode() {
 		return
 	}
+	dev.connected = false
 	iapi.AMDeviceDisconnect(dev.ModeDevice())
 }

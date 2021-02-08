@@ -133,3 +133,14 @@ func ATHostConnectionGetGrappaSessionId(athconn uintptr) int32 {
 func ATHostConnectionReadMessage(athconn uintptr) uintptr {
 	return uintptr(C.ATHostConnectionReadMessage(unsafe.Pointer(athconn)))
 }
+
+//ATHostConnectionReadMessagePlist ...
+func ATHostConnectionReadMessagePlist(athconn uintptr) (plmsg []byte) {
+	msg := uintptr(C.ATHostConnectionReadMessage(unsafe.Pointer(athconn)))
+	if msg == 0 {
+		return
+	}
+	plmsg = CFToPlist(msg)
+	C.CFRelease(C.CFTypeRef(msg))
+	return
+}

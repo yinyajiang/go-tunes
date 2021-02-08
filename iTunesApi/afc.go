@@ -10,21 +10,6 @@ package iapi
 import "C"
 import "unsafe"
 
-const (
-	AFC_FOPEN_RDONLY   = 0x00000001
-	AFC_FOPEN_RW       = 0x00000002
-	AFC_FOPEN_WRONLY   = 0x00000003
-	AFC_FOPEN_WRT      = 0x00000004
-	AFC_FOPEN_APPEND   = 0x00000005
-	AFC_FOPEN_RDAPPEND = 0x00000006
-)
-
-const (
-	AFC_SEEK_SET = 0
-	AFC_SEEK_CUR = 1
-	AFC_SEEK_END = 2
-)
-
 //AFCConnectionOpen ...
 func AFCConnectionOpen(afcconn uintptr) (conn uintptr) {
 	C.AFCConnectionOpen(
@@ -144,12 +129,12 @@ func AFCFileRefOpen(conn uintptr, path string, mode int64) (fileHand uint64) {
 }
 
 //AFCFileRefRead ...
-func AFCFileRefRead(conn uintptr, filehand uint64, buff []byte) (readed int) {
+func AFCFileRefRead(conn uintptr, filehand uint64, buff []byte) (readed int, res int) {
 	size := uint32(len(buff))
-	C.AFCFileRefRead(unsafe.Pointer(conn),
+	res = int(C.AFCFileRefRead(unsafe.Pointer(conn),
 		C.ulonglong(filehand),
 		unsafe.Pointer(SpliceToPtr(buff)),
-		(unsafe.Pointer(&size)))
+		(unsafe.Pointer(&size))))
 	readed = int(size)
 	return
 }

@@ -18,4 +18,12 @@ type IOSDevice interface {
 	AbordTrust()
 	IsTrusted() bool
 	IsExtract() bool
+
+	SaveUserData(key string, val interface{})
+	GetUserData(key string) interface{}
+	DeleteUserData(key string)
+
+	GetStartService(name string) (conn uintptr, err error)
+	IsServiceRuning(name string) bool
+	StopService(name string)
 }

@@ -32,6 +32,13 @@ func MashalPlist(v interface{}) ([]byte, error) {
 	return plist.Marshal(v, plist.BinaryFormat)
 }
 
+//MashalPlistString ...
+func MashalPlistString(v interface{}) (s string, err error) {
+	r, err := plist.Marshal(v, plist.XMLFormat)
+	s = string(r)
+	return
+}
+
 //PlistToString ...
 func PlistToString(data []byte) string {
 	var dict map[string]interface{}
