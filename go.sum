@@ -8,6 +8,8 @@ github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfn
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
+github.com/mattn/go-sqlite3 v1.14.6 h1:dNPt6NO46WmLVt2DLNpwczCmdV5boIZ6g/tlDrlRUbg=
+github.com/mattn/go-sqlite3 v1.14.6/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
 github.com/yinyajiang/go-w32 v0.0.0-20210114063043-6dd37ad3ca61 h1:3+70A2HZOmtSoY62UkumvZq2R0/HsYkFbpkE77Ikaw0=
 github.com/yinyajiang/go-w32 v0.0.0-20210114063043-6dd37ad3ca61/go.mod h1:4GIwuyX8RkI7Y93sm7H8SbPeBsTMh1wJddakPyDOyQ0=
 github.com/yinyajiang/go-w32 v0.0.0-20210114072827-3364dff877b8 h1:9haUHs6obvBG8m3WNbEsk5WAXJ8ZsidZMzIxYPZ4eZ8=
@@ -29,6 +31,8 @@ github.com/yinyajiang/go-ytools v0.1.3-0.20210122084513-8a985f676b8f h1:CuWhzuUZ
 github.com/yinyajiang/go-ytools v0.1.3-0.20210122084513-8a985f676b8f/go.mod h1:XKVa5OAangdDnG8Yq+/E4wHl65T15bcyVR/TGOjZR8s=
 github.com/yinyajiang/go-ytools v0.1.3-0.20210208021852-f29ce6c410e5 h1:rmJVs0Hm2h92spJljJf9yphsgk52E1q6pcdhQkOfnbM=
 github.com/yinyajiang/go-ytools v0.1.3-0.20210208021852-f29ce6c410e5/go.mod h1:VF+bhsXB394DPwMqyRbRCpBMcBfLpu9Cio/8gDInS80=
+github.com/yinyajiang/go-ytools v0.1.3-0.20210220052414-1a2e2f3113a6 h1:RKJSbVX1lZXzJl+Jw32fEGzSiilf3zqg7C2t4nz1VuE=
+github.com/yinyajiang/go-ytools v0.1.3-0.20210220052414-1a2e2f3113a6/go.mod h1:VF+bhsXB394DPwMqyRbRCpBMcBfLpu9Cio/8gDInS80=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=

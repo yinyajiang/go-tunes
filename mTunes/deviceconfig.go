@@ -52,6 +52,7 @@ func GetDeviceModel(chipID, boardID int64) string {
 	return "unknow"
 }
 
+//GetDeviceAppearanceLevel ...
 func GetDeviceAppearanceLevel(model string) int {
 	switch GetDeviceType(model) {
 	case "iPhone":

@@ -5,6 +5,7 @@ import (
 	"io"
 
 	iapi "github.com/yinyajiang/go-tunes/iTunesApi"
+	mtunes "github.com/yinyajiang/go-tunes/mTunes"
 )
 
 //DeviceFileImpl ...
@@ -12,6 +13,7 @@ type DeviceFileImpl struct {
 	hand       uint64
 	afcConnect uintptr
 	info       *FileInfo
+	dev        mtunes.IOSDevice
 }
 
 //Read ...
@@ -21,6 +23,13 @@ func (f *DeviceFileImpl) Read(p []byte) (readed int, err error) {
 		return
 	}
 	for {
+		select {
+		case <-f.dev.ExtrackContext().Done():
+			err = fmt.Errorf("Device is extrack")
+			return
+		default:
+		}
+
 		read := len(p) - readed
 		if read == 0 {
 			break
@@ -58,6 +67,13 @@ func (f *DeviceFileImpl) Write(p []byte) (writen int, err error) {
 		return
 	}
 	for {
+		select {
+		case <-f.dev.ExtrackContext().Done():
+			err = fmt.Errorf("Device is extrack")
+			return
+		default:
+		}
+
 		write := len(p) - writen
 		if write == 0 {
 			break

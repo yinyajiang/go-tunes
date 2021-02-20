@@ -19,12 +19,14 @@ type IOSDeviceImpl struct {
 	buildSession   bool
 	connected      bool
 
+	extractCtx context.Context
+
 	userLock sync.RWMutex
 	userData map[string]interface{}
 }
 
-//NewIOSDevice ...
-func NewIOSDevice(mode string, modeDevice, originalDevice uintptr) IOSDevice {
+//NewIOSDeviceImpl ...
+func NewIOSDeviceImpl(extractCtx context.Context, mode string, modeDevice, originalDevice uintptr) *IOSDeviceImpl {
 	if len(mode) == 0 || modeDevice == 0 || originalDevice == 0 {
 		return nil
 	}
@@ -32,13 +34,16 @@ func NewIOSDevice(mode string, modeDevice, originalDevice uintptr) IOSDevice {
 		mode:           mode,
 		modeDevice:     modeDevice,
 		originalDevice: originalDevice,
+		extractCtx:     extractCtx,
 	}
 	err := dev.loadBaseInfo()
 	if err != nil {
 		fmt.Println("Load base info fail,", err)
 		return nil
 	}
-	if mode == "normal" {
+
+	//非拔出设备
+	if extractCtx != nil && mode == "normal" {
 		if nil != dev.Trust() { //try once
 			dev.loadDetailInfo() //load nottrust info
 		}
@@ -251,7 +256,20 @@ func (dev *IOSDeviceImpl) IsTrusted() bool {
 
 //IsExtract ...
 func (dev *IOSDeviceImpl) IsExtract() bool {
-	return !IsExistDevice(dev.ID())
+	if dev.extractCtx == nil {
+		return true
+	}
+	select {
+	case <-dev.extractCtx.Done():
+		return true
+	default:
+	}
+	return false
+}
+
+//ExtrackContext ...
+func (dev *IOSDeviceImpl) ExtrackContext() context.Context {
+	return dev.extractCtx
 }
 
 func (dev *IOSDeviceImpl) loadBaseInfo() error {
@@ -262,7 +280,6 @@ func (dev *IOSDeviceImpl) loadBaseInfo() error {
 	}
 
 	dev.info = make(map[string]interface{}, 10)
-
 	dev.info["ecid"] = strconv.FormatInt(ecid, 10)
 	dev.info["id"] = strconv.FormatInt(ecid, 10)
 	chipID := iapi.AMRestorableDeviceGetChipID(dev.OriginalDevice())

@@ -15,11 +15,12 @@ type NotifyEvent struct {
 }
 
 var (
-	devMutex sync.Mutex
-	devices  map[string]IOSDevice = make(map[string]IOSDevice, 2)
-	subMutex sync.Mutex
-	subChans map[chan *NotifyEvent]struct{} = make(map[chan *NotifyEvent]struct{}, 2)
-	iapiSub  bool
+	devMutex          sync.Mutex
+	devices           map[string]*IOSDeviceImpl     = make(map[string]*IOSDeviceImpl, 2)
+	extractCancleFuns map[string]context.CancelFunc = make(map[string]context.CancelFunc, 2)
+	subMutex          sync.Mutex
+	subChans          map[chan *NotifyEvent]struct{} = make(map[chan *NotifyEvent]struct{}, 2)
+	iapiSub           bool
 )
 
 //SubscriptionDeviceNotify ...
@@ -40,11 +41,7 @@ func StopEventLoop() {
 //OnceEventLoopForWaitDevice 为指定设备启动一次事件循环
 func OnceEventLoopForWaitDevice(ctx context.Context, id string) (dev IOSDevice) {
 	subscription(false)
-	go func() {
-		dev = WaitForDevice(ctx, id)
-		StopEventLoop()
-	}()
-	RunEventLoop()
+	dev = WaitForDevice(ctx, id)
 	return
 }
 
@@ -68,10 +65,11 @@ func DeviceCount() int {
 func WaitForDevice(ctx context.Context, id string) (dev IOSDevice) {
 	for dev == nil {
 		devMutex.Lock()
-		dev, _ = devices[id]
+		devImpl, ok := devices[id]
 		devMutex.Unlock()
 
-		if dev != nil {
+		if ok {
+			dev = devImpl
 			return
 		}
 
@@ -111,15 +109,21 @@ func subscription(retChan bool) (subChan <-chan *NotifyEvent) {
 }
 
 func deviceEvent(even, mode string, modeDevice, restorableDevice uintptr) {
-	dev := NewIOSDevice(mode, modeDevice, restorableDevice)
-	if dev == nil {
-		return
-	}
+	var dev *IOSDeviceImpl
 	devMutex.Lock()
 	if even == "insert" {
+		extractCtx, cancleFun := context.WithCancel(context.Background())
+		dev = NewIOSDeviceImpl(extractCtx, mode, modeDevice, restorableDevice)
 		devices[dev.ID()] = dev
+		extractCancleFuns[dev.ID()] = cancleFun
 	} else {
-		delete(devices, dev.ID())
+		dev = NewIOSDeviceImpl(nil, mode, modeDevice, restorableDevice)
+		delDev, ok := devices[dev.ID()]
+		if ok {
+			extractCancleFuns[delDev.ID()]()
+			delete(devices, delDev.ID())
+			delete(extractCancleFuns, delDev.ID())
+		}
 	}
 	devMutex.Unlock()
 

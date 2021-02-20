@@ -3,7 +3,9 @@ package mtunes
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 
+	tools "github.com/yinyajiang/go-ytools/utils"
 	"howett.net/plist"
 )
 
@@ -52,4 +54,17 @@ func PlistToString(data []byte) string {
 		return ""
 	}
 	return string(data)
+}
+
+//RadomName ...
+func RadomName(len int, alpha bool) string {
+	name := ""
+	for ; len > 0; len-- {
+		if alpha {
+			name += string(rune('A' + tools.RandNumN(26)))
+		} else {
+			name += strconv.Itoa(int(tools.RandNumN(9) + 1))
+		}
+	}
+	return name
 }

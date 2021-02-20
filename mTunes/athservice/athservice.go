@@ -12,22 +12,22 @@ import (
 	tools "github.com/yinyajiang/go-ytools/utils"
 )
 
-//AirService ...
-type AirService struct {
+//AthServiceImpl ...
+type AthServiceImpl struct {
 	dev        mtunes.IOSDevice
 	athConnect uintptr
-	proxy      AirProxy
+	proxy      AthProxy
 	status     string
 }
 
 //New ...
-func New(dev mtunes.IOSDevice, proxy AirProxy) (ath *AirService, err error) {
+func New(dev mtunes.IOSDevice, proxy AthProxy) (ath AthService, err error) {
 	if !dev.IsTrusted() {
 		err = fmt.Errorf("Device is not trusted")
 		return
 	}
 
-	ath = &AirService{
+	ath = &AthServiceImpl{
 		dev:    dev,
 		proxy:  proxy,
 		status: "status_allowed",
@@ -36,8 +36,8 @@ func New(dev mtunes.IOSDevice, proxy AirProxy) (ath *AirService, err error) {
 }
 
 //Dial ...
-func (ath *AirService) Dial() (err error) {
-	deviceIDface, ok := ath.dev.DeviceInfo()["DeviceID"]
+func (ath *AthServiceImpl) Dial() (err error) {
+	deviceIDface, ok := ath.dev.DeviceInfo()["uuid"]
 	if !ok {
 		return fmt.Errorf("deviceID is empty")
 	}
@@ -57,7 +57,7 @@ func (ath *AirService) Dial() (err error) {
 }
 
 //Exec ...
-func (ath *AirService) Exec(ctx context.Context) (err error) {
+func (ath *AthServiceImpl) Exec(ctx context.Context) (err error) {
 	msgChan := make(chan uintptr, 3)
 	recvLoopCtx, cancelRecvFun := context.WithCancel(ctx)
 
@@ -98,7 +98,7 @@ dispatchFor:
 	return nil
 }
 
-func (ath *AirService) receiveLoop(ctx context.Context, msgChan chan<- uintptr) {
+func (ath *AthServiceImpl) receiveLoop(ctx context.Context, msgChan chan<- uintptr) {
 	lastSleep := time.Now().Unix()
 	for {
 		msg := iapi.ATHostConnectionReadMessage(ath.athConnect)
@@ -124,7 +124,7 @@ func (ath *AirService) receiveLoop(ctx context.Context, msgChan chan<- uintptr) 
 	}
 }
 
-func (ath *AirService) eventDispatch(ctx context.Context, recvFinish chan<- struct{}, msg uintptr) (err error) {
+func (ath *AthServiceImpl) eventDispatch(ctx context.Context, recvFinish chan<- struct{}, msg uintptr) (err error) {
 	//ignore message: Progress AssetMetrics InstalledAssets
 	defer iapi.CFRelease(msg)
 
@@ -166,7 +166,7 @@ func (ath *AirService) eventDispatch(ctx context.Context, recvFinish chan<- stru
 	return
 }
 
-func (ath *AirService) allowEvent() (err error) {
+func (ath *AthServiceImpl) allowEvent() (err error) {
 	keybag, anchors := ath.proxy.GetKeybag()
 	if len(keybag) == 0 || len(anchors) == 0 {
 		return fmt.Errorf("GetKeybag is empty")
@@ -178,30 +178,16 @@ func (ath *AirService) allowEvent() (err error) {
 	return
 }
 
-func (ath *AirService) readyEvent(ctx context.Context, msg uintptr) (err error) {
-	stMsg := struct {
-		Params struct {
-			DataclassAnchors map[string]string `plist:"DataclassAnchors"`
-			DeviceInfo       struct {
-				Grappa []byte `plist:"Grappa"`
-			} `plist:"DeviceInfo"`
-		} `plist:"Params"`
-	}{}
-
+func (ath *AthServiceImpl) readyEvent(ctx context.Context, msg uintptr) (err error) {
 	plmsg := iapi.CFToPlist(msg)
-	_, err = mtunes.UnmashalPlist(plmsg, &stMsg)
+	keybag, _ := ath.proxy.GetKeybag()
+
+	syncNum, grappa, err := unmarshalReadyProto(plmsg, keybag)
 	if err != nil {
 		return
 	}
-	keybag, _ := ath.proxy.GetKeybag()
-	syncNum, ok := stMsg.Params.DataclassAnchors[keybag]
-	if !ok {
-		syncNum = stMsg.Params.DataclassAnchors["Media"]
-	}
-	if len(syncNum) == 0 {
-		return fmt.Errorf("Not get sync num")
-	}
-	err = ath.proxy.SubmitReadyPlist(syncNum, stMsg.Params.DeviceInfo.Grappa)
+
+	err = ath.proxy.SubmitReadyPlist(syncNum, grappa)
 	if err != nil {
 		return
 	}
@@ -215,36 +201,16 @@ func (ath *AirService) readyEvent(ctx context.Context, msg uintptr) (err error) 
 	return
 }
 
-func (ath *AirService) manifestEvent(ctx context.Context, msg uintptr) (err error) {
-
-	type AssetItem struct {
-		AssetID string `plist:"AssetID"`
-	}
-	type AssetArray []AssetItem
-	stMsg := struct {
-		Params struct {
-			AssetManifest map[string]AssetArray `plist:"AssetManifest"`
-		} `plist:"Params"`
-	}{}
-
+func (ath *AthServiceImpl) manifestEvent(ctx context.Context, msg uintptr) (err error) {
 	plmsg := iapi.CFToPlist(msg)
-	_, err = mtunes.UnmashalPlist(plmsg, &stMsg)
+	keybag, _ := ath.proxy.GetKeybag()
+
+	assetArray, err := unmarshalManifestProto(plmsg, keybag)
 	if err != nil {
 		return
 	}
-	if len(stMsg.Params.AssetManifest) == 0 {
-		return fmt.Errorf("Mainifest event is empty")
-	}
-	keybag, _ := ath.proxy.GetKeybag()
-	assetArray, ok := stMsg.Params.AssetManifest[keybag]
-	if !ok {
-		assetArray = stMsg.Params.AssetManifest["Media"]
-	}
-	if len(assetArray) == 0 {
-		return fmt.Errorf("Mainifest event assetArray is empty")
-	}
 
-	for _, item := range assetArray {
+	for _, assetID := range assetArray {
 		select {
 		case <-ctx.Done():
 			err = fmt.Errorf("Cancle when copy asset")
@@ -252,18 +218,18 @@ func (ath *AirService) manifestEvent(ctx context.Context, msg uintptr) (err erro
 		default:
 		}
 
-		r, size, err := ath.proxy.OpenEntityReader(item.AssetID)
+		r, size, err := ath.proxy.OpenEntityReader(assetID)
 		if err != nil {
 			continue
 		}
-		w, notify, err := ath.proxy.OpenEntityWriter(item.AssetID)
+		w, notify, err := ath.proxy.OpenEntityWriter(assetID)
 		if err != nil {
 			r.Close()
 			continue
 		}
 		_, err = tools.CopyFun(ctx, size, w, r, func(total int64, prog float64) {
 			iapi.ATHostConnectionSendFileProgress(ath.athConnect,
-				item.AssetID,
+				assetID,
 				keybag,
 				0,
 				int32(1067450368.0+5242880.0*prog),
@@ -272,9 +238,9 @@ func (ath *AirService) manifestEvent(ctx context.Context, msg uintptr) (err erro
 		w.Close()
 		r.Close()
 		if err != nil {
-			iapi.ATHostConnectionSendFileError(ath.athConnect, item.AssetID, keybag, 3)
+			iapi.ATHostConnectionSendFileError(ath.athConnect, assetID, keybag, 3)
 		} else {
-			iapi.ATHostConnectionSendAssetCompleted(ath.athConnect, item.AssetID, keybag, notify)
+			iapi.ATHostConnectionSendAssetCompleted(ath.athConnect, assetID, keybag, notify)
 		}
 	}
 	return

@@ -19,6 +19,8 @@ type IOSDevice interface {
 	IsTrusted() bool
 	IsExtract() bool
 
+	ExtrackContext() context.Context
+
 	SaveUserData(key string, val interface{})
 	GetUserData(key string) interface{}
 	DeleteUserData(key string)

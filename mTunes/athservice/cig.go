@@ -14,7 +14,7 @@ import (
 )
 
 //CigCalc 计算同步Plist的cig值
-func cigCalc(grappa []byte, plist []byte) (cig []byte) {
+func CigCalc(grappa []byte, plist []byte) (cig []byte) {
 	var cigbuff [21]byte
 	ciglen := int32(21)
 	if C.BOOL(1) != C.cigCalc(

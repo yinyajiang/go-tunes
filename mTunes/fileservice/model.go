@@ -50,8 +50,10 @@ type File interface {
 type FileService interface {
 	GetFileInfo(path string) *FileInfo
 	IsFileExist(path string) bool
-	PathWalk(dir string, dirFun func(path string, info *FileInfo, postName string)) bool
+	PathWalk(dir string, dirFun func(path string, info *FileInfo, postName string) bool)
 	CreateDirectorys(path string)
 	RemovePath(path string)
-	OpenFile(path string, mode int64) File
+	OpenFile(path string, mode int64) (File, error)
+	ReadFileAll(path string) ([]byte, error)
+	WriteFileAll(path string, data []byte) error
 }

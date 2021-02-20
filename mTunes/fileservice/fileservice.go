@@ -2,6 +2,7 @@ package fileservice
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strconv"
 	"strings"
 
@@ -17,7 +18,7 @@ type Service struct {
 }
 
 //New ...
-func New(dev mtunes.IOSDevice) (svc *Service, err error) {
+func New(dev mtunes.IOSDevice) (svc FileService, err error) {
 	if dev == nil {
 		err = fmt.Errorf("Dev is nil")
 		return
@@ -26,10 +27,11 @@ func New(dev mtunes.IOSDevice) (svc *Service, err error) {
 	if err != nil {
 		return
 	}
-	svc = &Service{
+	psvc := &Service{
 		dev:        dev,
 		afcConnect: afcConnect,
 	}
+	svc = psvc
 	return
 }
 
@@ -90,7 +92,7 @@ func (svc *Service) IsFileExist(path string) bool {
 }
 
 //PathWalk ...
-func (svc *Service) PathWalk(dir string, dirFun func(path string, info *FileInfo, postName string) bool) {
+func (svc *Service) PathWalk(dir string, dirFun func(string, *FileInfo, string) bool) {
 	if dirFun == nil {
 		return
 	}
@@ -102,6 +104,12 @@ func (svc *Service) PathWalk(dir string, dirFun func(path string, info *FileInfo
 	defer iapi.AFCDirectoryClose(svc.afcConnect, hand)
 
 	for {
+		select {
+		case <-svc.dev.ExtrackContext().Done():
+			return
+		default:
+		}
+
 		name := iapi.AFCDirectoryRead(svc.afcConnect, hand)
 		if len(name) == 0 {
 			break
@@ -148,16 +156,44 @@ func (svc *Service) RenameAndMove(src, dst string) {
 }
 
 //OpenFile ...
-func (svc *Service) OpenFile(path string, mode int64) File {
+func (svc *Service) OpenFile(path string, mode int64) (f File, err error) {
+	if mode == AFC_FOPEN_WRONLY {
+		svc.RemovePath(path)
+	}
 	fhand := iapi.AFCFileRefOpen(svc.afcConnect, path, mode)
 	if 0 == fhand {
-		fmt.Printf("Open %s fail\n", path)
-		return nil
+		err = fmt.Errorf("Open %s fail\n", path)
+		return
 	}
-	return &DeviceFileImpl{
+	f = &DeviceFileImpl{
 		hand:       fhand,
 		afcConnect: svc.afcConnect,
+		dev:        svc.dev,
 	}
+	return
+}
+
+//ReadFileAll ...
+func (svc *Service) ReadFileAll(path string) (data []byte, err error) {
+	f, err := svc.OpenFile(path, AFC_FOPEN_RDONLY)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	data, err = ioutil.ReadAll(f)
+	return
+}
+
+//WriteFileAll ...
+func (svc *Service) WriteFileAll(path string, data []byte) (err error) {
+	svc.CreateDirectorys(tools.AbsPath(path))
+	f, err := svc.OpenFile(path, AFC_FOPEN_WRONLY)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	_, err = f.Write(data)
+	return
 }
 
 func getAfcConnect(dev mtunes.IOSDevice) (afcConnect uintptr, err error) {

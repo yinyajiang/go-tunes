@@ -1,6 +1,7 @@
 package athservice
 
 import (
+	"fmt"
 	"os"
 
 	itunes "github.com/yinyajiang/go-tunes/iTunesEnv"
@@ -159,6 +160,67 @@ func responseReadyProto(keybag, syncNum string) (pl1 []byte, pl2 []byte, err err
 	pl2, err = mtunes.MashalPlist(p2)
 	if err != nil {
 		return
+	}
+	return
+}
+
+func unmarshalReadyProto(plmsg []byte, keybag string) (syncNum string, grappa []byte, err error) {
+	stMsg := struct {
+		Params struct {
+			DataclassAnchors map[string]string `plist:"DataclassAnchors"`
+			DeviceInfo       struct {
+				Grappa []byte `plist:"Grappa"`
+			} `plist:"DeviceInfo"`
+		} `plist:"Params"`
+	}{}
+
+	_, err = mtunes.UnmashalPlist(plmsg, &stMsg)
+	if err != nil {
+		return
+	}
+	syncNum, ok := stMsg.Params.DataclassAnchors[keybag]
+	if !ok {
+		syncNum = stMsg.Params.DataclassAnchors["Media"]
+	}
+	if len(syncNum) == 0 {
+		err = fmt.Errorf("Not get sync num")
+		return
+	}
+	grappa = stMsg.Params.DeviceInfo.Grappa
+	return
+}
+
+func unmarshalManifestProto(plmsg []byte, keybag string) (idArray []string, err error) {
+	type AssetItem struct {
+		AssetID string `plist:"AssetID"`
+	}
+	type AssetArray []AssetItem
+	stMsg := struct {
+		Params struct {
+			AssetManifest map[string]AssetArray `plist:"AssetManifest"`
+		} `plist:"Params"`
+	}{}
+
+	_, err = mtunes.UnmashalPlist(plmsg, &stMsg)
+	if err != nil {
+		return
+	}
+	if len(stMsg.Params.AssetManifest) == 0 {
+		err = fmt.Errorf("Mainifest event is empty")
+		return
+	}
+
+	assetArray, ok := stMsg.Params.AssetManifest[keybag]
+	if !ok {
+		assetArray = stMsg.Params.AssetManifest["Media"]
+	}
+	if len(assetArray) == 0 {
+		err = fmt.Errorf("Mainifest event assetArray is empty")
+		return
+	}
+	idArray = make([]string, 0, 2)
+	for _, item := range assetArray {
+		idArray = append(idArray, item.AssetID)
 	}
 	return
 }

@@ -96,6 +96,11 @@ func RunLoopRun() {
 
 }
 
+//IsRunLoop ...
+func IsRunLoop() bool {
+	return loopCancle != nil
+}
+
 //RunLoopStop ...
 func RunLoopStop() {
 	/*
