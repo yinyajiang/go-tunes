@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	iapi "github.com/yinyajiang/go-tunes/iTunesApi"
 )
 
-//IOSDeviceImpl ...
-type IOSDeviceImpl struct {
+type deviceImpl struct {
 	mode           string
 	modeDevice     uintptr
 	originalDevice uintptr
@@ -25,12 +25,11 @@ type IOSDeviceImpl struct {
 	userData map[string]interface{}
 }
 
-//NewIOSDeviceImpl ...
-func NewIOSDeviceImpl(extractCtx context.Context, mode string, modeDevice, originalDevice uintptr) *IOSDeviceImpl {
+func newDeviceImpl(extractCtx context.Context, mode string, modeDevice, originalDevice uintptr) *deviceImpl {
 	if len(mode) == 0 || modeDevice == 0 || originalDevice == 0 {
 		return nil
 	}
-	dev := &IOSDeviceImpl{
+	dev := &deviceImpl{
 		mode:           mode,
 		modeDevice:     modeDevice,
 		originalDevice: originalDevice,
@@ -52,7 +51,7 @@ func NewIOSDeviceImpl(extractCtx context.Context, mode string, modeDevice, origi
 }
 
 //SaveUserData ...
-func (dev *IOSDeviceImpl) SaveUserData(key string, val interface{}) {
+func (dev *deviceImpl) SaveUserData(key string, val interface{}) {
 	dev.userLock.Lock()
 	defer dev.userLock.Unlock()
 	if dev.userData == nil {
@@ -62,7 +61,7 @@ func (dev *IOSDeviceImpl) SaveUserData(key string, val interface{}) {
 }
 
 //GetUserData ...
-func (dev *IOSDeviceImpl) GetUserData(key string) interface{} {
+func (dev *deviceImpl) GetUserData(key string) interface{} {
 	dev.userLock.RLock()
 	defer dev.userLock.RUnlock()
 	if dev.userData == nil {
@@ -72,7 +71,7 @@ func (dev *IOSDeviceImpl) GetUserData(key string) interface{} {
 }
 
 //DeleteUserData ...
-func (dev *IOSDeviceImpl) DeleteUserData(key string) {
+func (dev *deviceImpl) DeleteUserData(key string) {
 	dev.userLock.Lock()
 	defer dev.userLock.Unlock()
 	if dev.userData == nil {
@@ -82,34 +81,52 @@ func (dev *IOSDeviceImpl) DeleteUserData(key string) {
 }
 
 //GetStartService ...
-func (dev *IOSDeviceImpl) GetStartService(name string) (conn uintptr, err error) {
+func (dev *deviceImpl) GetStartService(name string) (conn uintptr, err error) {
 	if !dev.IsTrusted() {
-		err = fmt.Errorf("Device Not device")
+		err = fmt.Errorf("Device not trust")
 		return
 	}
 
-	conn, ok := dev.GetUserData(name + "_conn").(uintptr)
+	conn, ok := dev.GetUserData(name + "_#@Service_Conn@#_").(uintptr)
 	if ok {
 		return
 	}
 
-	conn = iapi.AMDeviceStartService(dev.ModeDevice(), name)
+	conn, res := iapi.AMDeviceStartService(dev.ModeDevice(), name)
+	if 0xe800001a == res || 0xE800001A == res { //kAMDPasswordProtectedError = 0xe800001a
+		err = fmt.Errorf("Device password protected")
+		return
+	}
+
 	if 0 == conn {
 		err = fmt.Errorf("Start %s service fail", name)
 		return
 	}
-	dev.SaveUserData(name+"_conn", conn)
+	dev.SaveUserData(name+"_#@Service_Conn@#_", conn)
 	return
 }
 
+func (dev *deviceImpl) Release() {
+	dev.userLock.RLock()
+	tmpData := dev.userData
+	dev.userLock.RUnlock()
+	for k := range tmpData {
+		if !strings.HasSuffix(k, "_#@Service_Conn@#_") {
+			continue
+		}
+		nm := k[0 : len(k)-len("_#@Service_Conn@#_")]
+		dev.StopService(nm)
+	}
+}
+
 //IsServiceRuning ...
-func (dev *IOSDeviceImpl) IsServiceRuning(name string) bool {
+func (dev *deviceImpl) IsServiceRuning(name string) bool {
 	_, ok := dev.GetUserData(name + "_conn").(uintptr)
 	return ok
 }
 
 //StopService ...
-func (dev *IOSDeviceImpl) StopService(name string) {
+func (dev *deviceImpl) StopService(name string) {
 	conn, ok := dev.GetUserData(name + "_conn").(uintptr)
 	if ok {
 		iapi.AMDServiceConnectionInvalidate(conn)
@@ -118,22 +135,22 @@ func (dev *IOSDeviceImpl) StopService(name string) {
 }
 
 //Mode ...
-func (dev *IOSDeviceImpl) Mode() string {
+func (dev *deviceImpl) Mode() string {
 	return dev.mode
 }
 
 //ID ...
-func (dev *IOSDeviceImpl) ID() string {
+func (dev *deviceImpl) ID() string {
 	return dev.DeviceInfo()["id"].(string)
 }
 
 //ECID ...
-func (dev *IOSDeviceImpl) ECID() string {
+func (dev *deviceImpl) ECID() string {
 	return dev.DeviceInfo()["ecid"].(string)
 }
 
 //Model ...
-func (dev *IOSDeviceImpl) Model() string {
+func (dev *deviceImpl) Model() string {
 	model, ok := dev.DeviceInfo()["model"].(string)
 	if ok {
 		return model
@@ -142,7 +159,7 @@ func (dev *IOSDeviceImpl) Model() string {
 }
 
 //Version ...
-func (dev *IOSDeviceImpl) Version() string {
+func (dev *deviceImpl) Version() string {
 	ver, ok := dev.DeviceInfo()["ProductVersion"].(string)
 	if ok {
 		return ver
@@ -152,7 +169,7 @@ func (dev *IOSDeviceImpl) Version() string {
 }
 
 //ModelName ...
-func (dev *IOSDeviceImpl) ModelName() string {
+func (dev *deviceImpl) ModelName() string {
 	modelName, ok := dev.DeviceInfo()["modelName"].(string)
 	if ok {
 		return modelName
@@ -161,23 +178,23 @@ func (dev *IOSDeviceImpl) ModelName() string {
 }
 
 //DeviceInfo ...
-func (dev *IOSDeviceImpl) DeviceInfo() map[string]interface{} {
+func (dev *deviceImpl) DeviceInfo() map[string]interface{} {
 	dev.info["trust"] = dev.IsTrusted()
 	return dev.info
 }
 
 //ModeDevice ...
-func (dev *IOSDeviceImpl) ModeDevice() uintptr {
+func (dev *deviceImpl) ModeDevice() uintptr {
 	return dev.modeDevice
 }
 
 //OriginalDevice ...
-func (dev *IOSDeviceImpl) OriginalDevice() uintptr {
+func (dev *deviceImpl) OriginalDevice() uintptr {
 	return dev.originalDevice
 }
 
 //Trust ...
-func (dev *IOSDeviceImpl) Trust() (err error) {
+func (dev *deviceImpl) Trust() (err error) {
 	if dev.buildSession {
 		return nil
 	}
@@ -219,7 +236,7 @@ func (dev *IOSDeviceImpl) Trust() (err error) {
 }
 
 //WaitTrust ...
-func (dev *IOSDeviceImpl) WaitTrust(ctx context.Context) error {
+func (dev *deviceImpl) WaitTrust(ctx context.Context) error {
 	if "normal" != dev.Mode() {
 		return fmt.Errorf("Is not normal mode")
 	}
@@ -241,7 +258,7 @@ func (dev *IOSDeviceImpl) WaitTrust(ctx context.Context) error {
 }
 
 //AbordTrust ...
-func (dev *IOSDeviceImpl) AbordTrust() {
+func (dev *deviceImpl) AbordTrust() {
 	if dev.buildSession {
 		dev.buildSession = false
 		iapi.AMDeviceStopSession(dev.ModeDevice())
@@ -250,12 +267,12 @@ func (dev *IOSDeviceImpl) AbordTrust() {
 }
 
 //IsTrusted ...
-func (dev *IOSDeviceImpl) IsTrusted() bool {
+func (dev *deviceImpl) IsTrusted() bool {
 	return dev.buildSession
 }
 
 //IsExtract ...
-func (dev *IOSDeviceImpl) IsExtract() bool {
+func (dev *deviceImpl) IsExtract() bool {
 	if dev.extractCtx == nil {
 		return true
 	}
@@ -268,11 +285,11 @@ func (dev *IOSDeviceImpl) IsExtract() bool {
 }
 
 //ExtrackContext ...
-func (dev *IOSDeviceImpl) ExtrackContext() context.Context {
+func (dev *deviceImpl) ExtrackContext() context.Context {
 	return dev.extractCtx
 }
 
-func (dev *IOSDeviceImpl) loadBaseInfo() error {
+func (dev *deviceImpl) loadBaseInfo() error {
 
 	ecid := iapi.AMRestorableDeviceGetECID(dev.OriginalDevice())
 	if ecid == 0 {
@@ -316,7 +333,7 @@ func (dev *IOSDeviceImpl) loadBaseInfo() error {
 	return nil
 }
 
-func (dev *IOSDeviceImpl) loadDetailInfo() error {
+func (dev *deviceImpl) loadDetailInfo() error {
 	if "normal" != dev.Mode() {
 		return fmt.Errorf("Mode is not normal")
 	}
@@ -349,7 +366,7 @@ func (dev *IOSDeviceImpl) loadDetailInfo() error {
 }
 
 //Connect connect normal device
-func (dev *IOSDeviceImpl) connect() error {
+func (dev *deviceImpl) connect() error {
 	if "normal" != dev.Mode() {
 		return fmt.Errorf("Connect not normal device")
 	}
@@ -364,7 +381,7 @@ func (dev *IOSDeviceImpl) connect() error {
 }
 
 //Disconnect ...
-func (dev *IOSDeviceImpl) disconnect() {
+func (dev *deviceImpl) disconnect() {
 	if !dev.connected {
 		return
 	}

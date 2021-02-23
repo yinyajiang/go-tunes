@@ -5,30 +5,28 @@ import (
 	"io"
 	"strconv"
 
-	mtunes "github.com/yinyajiang/go-tunes/mTunes"
 	"github.com/yinyajiang/go-tunes/mTunes/athservice"
 	"github.com/yinyajiang/go-tunes/mTunes/fileservice"
 	tools "github.com/yinyajiang/go-ytools/utils"
 )
 
-//RingtoneAthProxy ...
-type RingtoneAthProxy struct {
+type syncProxy struct {
 	inserts map[uint64]*TrackInfo
 	dels    map[uint64]*TrackInfo
-	dev     mtunes.IOSDevice
+	fs      fileservice.Service
 }
 
-func (p *RingtoneAthProxy) TransferFinish(entityID string) {
+func (p *syncProxy) AssetFinish(entityID string, successed bool) {
 
 }
 
 //GetKeybag ...
-func (p *RingtoneAthProxy) GetKeybag() (keybag string, anchors []string) {
+func (p *syncProxy) GetKeybag() (keybag string, anchors []string) {
 	return "Ringtone", []string{"0"}
 }
 
-//OpenEntityWriter ...
-func (p *RingtoneAthProxy) OpenEntityWriter(entityID string) (w io.WriteCloser, target string, err error) {
+//OpenAssetWriter ...
+func (p *syncProxy) OpenAssetWriter(entityID string) (w io.WriteCloser, target string, err error) {
 	pid, err := strconv.ParseUint(entityID, 0, 64)
 	if err != nil {
 		return
@@ -46,14 +44,23 @@ func (p *RingtoneAthProxy) OpenEntityWriter(entityID string) (w io.WriteCloser, 
 		err = fmt.Errorf("inserts item is not fake")
 		return
 	}
-	fs, err := fileservice.New(track.dev)
-	w, err = fs.OpenFile(track.Path, fileservice.AFC_FOPEN_WRONLY)
+	w, err = p.fs.OpenFile(track.Path, fileservice.AFC_FOPEN_WRONLY)
 	target = track.Path
 	return
 }
 
-//OpenEntityReader ...
-func (p *RingtoneAthProxy) OpenEntityReader(entityID string) (r io.ReadCloser, size int64, err error) {
+//IsExistEntity ...
+func (p *syncProxy) IsExistAsset(entityID string) bool {
+	pid, err := strconv.ParseUint(entityID, 0, 64)
+	if err != nil {
+		return false
+	}
+	_, ok := p.inserts[pid]
+	return ok
+}
+
+//OpenAssetReader ...
+func (p *syncProxy) OpenAssetReader(entityID string) (r io.ReadCloser, size int64, err error) {
 	pid, err := strconv.ParseUint(entityID, 0, 64)
 	if err != nil {
 		return
@@ -75,16 +82,14 @@ func (p *RingtoneAthProxy) OpenEntityReader(entityID string) (r io.ReadCloser, s
 	if track.dev == nil {
 		r, err = tools.OpenReadFile(track.fakeSrcPath)
 	} else {
-		var fs fileservice.FileService
-		fs, err = fileservice.New(track.dev)
-		r, err = fs.OpenFile(track.fakeSrcPath, fileservice.AFC_FOPEN_RDONLY)
+		r, err = p.fs.OpenFile(track.fakeSrcPath, fileservice.AFC_FOPEN_RDONLY)
 	}
 
 	return
 }
 
 //SubmitReadyPlist ...
-func (p *RingtoneAthProxy) SubmitReadyPlist(syncNum string, grapa []byte) (err error) {
+func (p *syncProxy) SubmitReadyPlist(strSyncNum string, grapa []byte) (err error) {
 	insertArr := make([]*TrackInfo, 0, len(p.inserts))
 	delArr := make([]*TrackInfo, 0, len(p.dels))
 	for _, t := range p.inserts {
@@ -94,12 +99,12 @@ func (p *RingtoneAthProxy) SubmitReadyPlist(syncNum string, grapa []byte) (err e
 		delArr = append(delArr, t)
 	}
 
-	n, _ := strconv.Atoi(syncNum)
-	pl, err := mashalUpdateProto(n, insertArr, delArr)
+	syncNum, _ := strconv.Atoi(strSyncNum)
+	pl, err := mashalUpdateProto(syncNum, insertArr, delArr)
 	if err != nil {
 		return
 	}
-	path := fmt.Sprintf("/iTunes_Control/Ringtones/Sync/Sync_%08d.plist", uint(n))
+	path := fmt.Sprintf("/iTunes_Control/Ringtones/Sync/Sync_%08d.plist", uint(syncNum))
 	if err != nil {
 		return
 	}
@@ -107,20 +112,16 @@ func (p *RingtoneAthProxy) SubmitReadyPlist(syncNum string, grapa []byte) (err e
 	if err != nil {
 		return
 	}
-	path = fmt.Sprintf("/iTunes_Control/Sync/Media/Sync_%08d.plist", uint(n))
+	path = fmt.Sprintf("/iTunes_Control/Sync/Media/Sync_%08d.plist", uint(syncNum))
 	if err != nil {
 		return
 	}
-	err = p.writeSyncPlist(path, grapa, operaitionsProto())
+	err = p.writeSyncPlist(path, grapa, operaitionsProto(syncNum))
 	return
 }
 
-func (p *RingtoneAthProxy) writeSyncPlist(path string, grapa, plist []byte) (err error) {
-	fs, err := fileservice.New(p.dev)
-	if err != nil {
-		return
-	}
-	err = fs.WriteFileAll(path, plist)
+func (p *syncProxy) writeSyncPlist(path string, grapa, plist []byte) (err error) {
+	err = p.fs.WriteFileAll(path, plist)
 	if err != nil {
 		return err
 	}
@@ -131,6 +132,6 @@ func (p *RingtoneAthProxy) writeSyncPlist(path string, grapa, plist []byte) (err
 	if len(cig) == 0 {
 		return fmt.Errorf("Calc cig fail")
 	}
-	err = fs.WriteFileAll(path+".cig", cig)
+	err = p.fs.WriteFileAll(path+".cig", cig)
 	return
 }

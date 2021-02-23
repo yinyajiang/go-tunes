@@ -143,13 +143,13 @@ func AMDeviceStartSession(modeldev uintptr) int32 {
 }
 
 //AMDeviceStartService ...
-func AMDeviceStartService(modeldev uintptr, name string) (connect uintptr) {
+func AMDeviceStartService(modeldev uintptr, name string) (connect uintptr, res uint32) {
 	var nUnknown int
-	C.AMDeviceStartService(
+	res = uint32(C.AMDeviceStartService(
 		unsafe.Pointer(modeldev),
 		unsafe.Pointer(MakeCFString(name)),
 		C.PPV(unsafe.Pointer(&connect)),
-		unsafe.Pointer(&nUnknown))
+		unsafe.Pointer(&nUnknown)))
 	return
 }
 

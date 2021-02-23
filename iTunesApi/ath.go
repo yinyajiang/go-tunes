@@ -8,7 +8,9 @@ package iapi
 #include "simpleApi.h"
 */
 import "C"
-import "unsafe"
+import (
+	"unsafe"
+)
 
 //ATCFMessageGetParam ...
 func ATCFMessageGetParam(msg uintptr, name string) (para uintptr) {

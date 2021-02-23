@@ -11,32 +11,33 @@ import (
 	tools "github.com/yinyajiang/go-ytools/utils"
 )
 
-//Service ...
-type Service struct {
-	dev        mtunes.IOSDevice
+type serviceImpl struct {
+	dev        mtunes.Device
 	afcConnect uintptr
 }
 
 //New ...
-func New(dev mtunes.IOSDevice) (svc FileService, err error) {
+func New(dev mtunes.Device) (svc Service, err error) {
 	if dev == nil {
 		err = fmt.Errorf("Dev is nil")
 		return
 	}
-	afcConnect, err := getAfcConnect(dev)
 	if err != nil {
 		return
 	}
-	psvc := &Service{
-		dev:        dev,
-		afcConnect: afcConnect,
+	psvc := &serviceImpl{
+		dev: dev,
+	}
+	err = psvc.connectAFC()
+	if err != nil {
+		return
 	}
 	svc = psvc
 	return
 }
 
 //GetFileInfo ...
-func (svc *Service) GetFileInfo(path string) *FileInfo {
+func (svc *serviceImpl) GetFileInfo(path string) *FileInfo {
 	hand := iapi.AFCFileInfoOpen(svc.afcConnect, path)
 	if 0 == hand {
 		return nil
@@ -82,7 +83,7 @@ func (svc *Service) GetFileInfo(path string) *FileInfo {
 }
 
 //IsFileExist ...
-func (svc *Service) IsFileExist(path string) bool {
+func (svc *serviceImpl) IsFileExist(path string) bool {
 	hand := iapi.AFCFileInfoOpen(svc.afcConnect, path)
 	if 0 == hand {
 		return false
@@ -92,7 +93,7 @@ func (svc *Service) IsFileExist(path string) bool {
 }
 
 //PathWalk ...
-func (svc *Service) PathWalk(dir string, dirFun func(string, *FileInfo, string) bool) {
+func (svc *serviceImpl) PathWalk(dir string, dirFun func(string, *FileInfo, string) bool) {
 	if dirFun == nil {
 		return
 	}
@@ -131,7 +132,7 @@ func (svc *Service) PathWalk(dir string, dirFun func(string, *FileInfo, string) 
 }
 
 //CreateDirectorys ...
-func (svc *Service) CreateDirectorys(path string) {
+func (svc *serviceImpl) CreateDirectorys(path string) {
 	for i, j := 0, 0; i != -1; j++ {
 		i = strings.Index(path[j:], "/")
 		if i == -1 {
@@ -146,26 +147,26 @@ func (svc *Service) CreateDirectorys(path string) {
 }
 
 //RemovePath ...
-func (svc *Service) RemovePath(path string) {
+func (svc *serviceImpl) RemovePath(path string) {
 	iapi.AFCRemovePath(svc.afcConnect, path)
 }
 
 //RenameAndMove ...
-func (svc *Service) RenameAndMove(src, dst string) {
+func (svc *serviceImpl) RenameAndMove(src, dst string) {
 	iapi.AFCRenamePath(svc.afcConnect, src, dst)
 }
 
 //OpenFile ...
-func (svc *Service) OpenFile(path string, mode int64) (f File, err error) {
+func (svc *serviceImpl) OpenFile(path string, mode int64) (f File, err error) {
 	if mode == AFC_FOPEN_WRONLY {
 		svc.RemovePath(path)
 	}
 	fhand := iapi.AFCFileRefOpen(svc.afcConnect, path, mode)
 	if 0 == fhand {
-		err = fmt.Errorf("Open %s fail\n", path)
+		err = fmt.Errorf("Open %s fail", path)
 		return
 	}
-	f = &DeviceFileImpl{
+	f = &fileImpl{
 		hand:       fhand,
 		afcConnect: svc.afcConnect,
 		dev:        svc.dev,
@@ -174,7 +175,7 @@ func (svc *Service) OpenFile(path string, mode int64) (f File, err error) {
 }
 
 //ReadFileAll ...
-func (svc *Service) ReadFileAll(path string) (data []byte, err error) {
+func (svc *serviceImpl) ReadFileAll(path string) (data []byte, err error) {
 	f, err := svc.OpenFile(path, AFC_FOPEN_RDONLY)
 	if err != nil {
 		return
@@ -185,7 +186,7 @@ func (svc *Service) ReadFileAll(path string) (data []byte, err error) {
 }
 
 //WriteFileAll ...
-func (svc *Service) WriteFileAll(path string, data []byte) (err error) {
+func (svc *serviceImpl) WriteFileAll(path string, data []byte) (err error) {
 	svc.CreateDirectorys(tools.AbsPath(path))
 	f, err := svc.OpenFile(path, AFC_FOPEN_WRONLY)
 	if err != nil {
@@ -196,22 +197,23 @@ func (svc *Service) WriteFileAll(path string, data []byte) (err error) {
 	return
 }
 
-func getAfcConnect(dev mtunes.IOSDevice) (afcConnect uintptr, err error) {
-	//Connect AFC
-	afcConnect, ok := dev.GetUserData("afc_connect").(uintptr)
-	if ok {
-		return
+//Release ...
+func (svc *serviceImpl) Release() {
+	if 0 != svc.afcConnect {
+		iapi.AFCConnectionClose(svc.afcConnect)
+		svc.afcConnect = 0
 	}
+}
 
-	afc, err := dev.GetStartService("com.apple.afc")
+func (svc *serviceImpl) connectAFC() (err error) {
+	afc, err := svc.dev.GetStartService("com.apple.afc")
 	if err != nil {
 		return
 	}
-	afcConnect = iapi.AFCConnectionOpen(afc)
-	if afcConnect == 0 {
+	svc.afcConnect = iapi.AFCConnectionOpen(afc)
+	if svc.afcConnect == 0 {
 		err = fmt.Errorf("Open Afc connect fail")
 		return
 	}
-	dev.SaveUserData("afc_connect", afcConnect)
 	return
 }

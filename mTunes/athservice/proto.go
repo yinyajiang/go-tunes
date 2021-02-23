@@ -229,7 +229,7 @@ func getiTunesVersion() string {
 	if len(itunesVersion) == 0 {
 		itunesVersion = itunes.New().Version
 		if len(itunesVersion) == 0 {
-			itunesVersion = "12.10.10.2"
+			itunesVersion = "12.10.2"
 		}
 	}
 	return itunesVersion

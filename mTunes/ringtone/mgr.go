@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"os"
 	"path"
 	"strings"
 	"time"
@@ -16,86 +15,92 @@ import (
 	tools "github.com/yinyajiang/go-ytools/utils"
 )
 
-//ManagerImpl ...
-type ManagerImpl struct {
-	dev       mtunes.IOSDevice
-	lastDBUTC int64
-	tracks    map[uint64]*TrackInfo
+type managerImpl struct {
+	dev         mtunes.Device
+	tracks      map[uint64]*TrackInfo
+	nameSet     map[string]struct{}
+	fileNameSet map[string]struct{}
+	bLoaded     bool
 }
 
 //New ...
-func New(dev mtunes.IOSDevice) (mgr Manager, err error) {
+func New(dev mtunes.Device) (mgr Manager, err error) {
 	if !dev.IsTrusted() {
 		err = fmt.Errorf("Device not trusted")
 		return
 	}
-	mgr = &ManagerImpl{
-		dev:    dev,
-		tracks: make(map[uint64]*TrackInfo, 1),
+	mgr = &managerImpl{
+		dev: dev,
 	}
 	return
 }
 
 //LoadTrack ...
-func (m *ManagerImpl) LoadTrack() (ret map[uint64]*TrackInfo, err error) {
+func (m *managerImpl) LoadTrack() (ret []TrackInfo, err error) {
 	fs, err := fileservice.New(m.dev)
 	if err != nil {
 		return
 	}
-	finfo := fs.GetFileInfo("/iTunes_Control/iTunes/Ringtones.plist")
-	if finfo.Modify == m.lastDBUTC {
-		ret = m.tracks
-		return
-	}
+
+	defer func() {
+		fs.Release()
+		if len(m.tracks) == 0 || err != nil {
+			return
+		}
+		ret = make([]TrackInfo, 0, len(m.tracks))
+		for _, t := range m.tracks {
+			if !t.isDeleted && !t.isInvalid {
+				ret = append(ret, *t)
+			}
+		}
+	}()
+
+	m.bLoaded = true
 	pl, err := fs.ReadFileAll("/iTunes_Control/iTunes/Ringtones.plist")
 	if err != nil {
 		return
 	}
-	m.tracks = Parse(pl)
-	for _, t := range m.tracks {
-		finfo := fs.GetFileInfo(t.Path)
-		t.Size = finfo.Size
-	}
-	m.lastDBUTC = finfo.Modify
-	ret = m.tracks
+	m.tracks, m.nameSet, m.fileNameSet = Parse(pl, fs)
 	return
 }
 
 //ImportTrack ...
-func (m *ManagerImpl) ImportTrack(base ImportTrackInfo) {
+func (m *managerImpl) ImportTrack(base ImportTrackInfo) {
+	if !m.bLoaded {
+		m.LoadTrack()
+	}
 
 	genFileName := func() string {
 		name := ""
 		for len(name) == 0 {
 			name = mtunes.RadomName(4, true)
-			for _, t := range m.tracks {
-				if t.Name == name && !t.isDeleted {
-					name = ""
-					break
-				}
+			_, ok := m.fileNameSet[name]
+			if !ok {
+				m.fileNameSet[name] = struct{}{}
+				break
 			}
+			name = ""
 		}
 		return name
 	}
 
 	genName := func(bn string) string {
 		name := bn
-		for _, t := range m.tracks {
-			if t.Name == bn && !t.isDeleted {
-				name = ""
-				break
-			}
+		_, ok := m.nameSet[name]
+		if !ok {
+			m.nameSet[name] = struct{}{}
+			return name
 		}
-
+		name = ""
 		i := 1
 		for len(name) == 0 {
 			name = fmt.Sprintf(bn+"(%d)", i)
-			for _, t := range m.tracks {
-				if t.Name == name && !t.isDeleted {
-					name = ""
-					break
-				}
+			_, ok := m.nameSet[name]
+			if !ok {
+				m.nameSet[name] = struct{}{}
+				break
 			}
+			name = ""
 			i++
 		}
 		return name
@@ -119,7 +124,11 @@ func (m *ManagerImpl) ImportTrack(base ImportTrackInfo) {
 }
 
 //DeleteTrack ...
-func (m *ManagerImpl) DeleteTrack(pid uint64) {
+func (m *managerImpl) DeleteTrack(pid uint64) {
+	if !m.bLoaded {
+		m.LoadTrack()
+	}
+
 	track, ok := m.tracks[pid]
 	if ok {
 		track.isDeleted = true
@@ -128,12 +137,13 @@ func (m *ManagerImpl) DeleteTrack(pid uint64) {
 }
 
 //Commit ...
-func (m *ManagerImpl) Commit(ctx context.Context) (err error) {
+func (m *managerImpl) Commit(ctx context.Context) (err error) {
 	for pid, track := range m.tracks {
 		if track.isFake && track.isDeleted {
 			delete(m.tracks, pid)
 		}
 	}
+
 	inserts := make(map[uint64]*TrackInfo, 0)
 	dels := make(map[uint64]*TrackInfo, 0)
 	for pid, track := range m.tracks {
@@ -146,12 +156,19 @@ func (m *ManagerImpl) Commit(ctx context.Context) (err error) {
 	if len(inserts) == 0 && len(dels) == 0 {
 		return
 	}
-	athProxy := &RingtoneAthProxy{
+
+	fs, err := fileservice.New(m.dev)
+	if err != nil {
+		return
+	}
+	defer func() {
+		fs.Release()
+	}()
+	ath, err := athservice.New(m.dev, &syncProxy{
 		inserts: inserts,
 		dels:    dels,
-		dev:     m.dev,
-	}
-	ath, err := athservice.New(m.dev, athProxy)
+		fs:      fs,
+	})
 	if err != nil {
 		return
 	}
@@ -159,7 +176,19 @@ func (m *ManagerImpl) Commit(ctx context.Context) (err error) {
 	if err != nil {
 		return
 	}
-	err = ath.Exec(ctx)
+	err = ath.Serve(ctx)
+
+	//remove name set
+	if err == nil {
+		for _, track := range m.tracks {
+			if track.isDeleted {
+				delete(m.fileNameSet, track.FileName)
+				delete(m.nameSet, track.Name)
+			}
+		}
+	}
+
+	m.LoadTrack()
 	return
 }
 
@@ -167,13 +196,7 @@ func gen16bitGUID() string {
 	var b [8]byte
 	// Timestamp, 4 bytes
 	binary.BigEndian.PutUint32(b[:], uint32(time.Now().Unix()))
-	// Pid 2 bytes
-	pid := os.Getpid()
-	b[4] = byte(pid >> 8)
-	b[5] = byte(pid)
-	//randnum, 2 bytes, big endian
-	num := tools.RandNumN(255)
-	b[6] = byte(num >> 8)
-	b[7] = byte(num)
+	//randnum, 4 bytes
+	binary.BigEndian.PutUint32(b[4:], uint32(tools.RandNum()))
 	return strings.ToUpper(hex.EncodeToString(b[:]))
 }

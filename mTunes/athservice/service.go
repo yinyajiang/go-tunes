@@ -12,22 +12,21 @@ import (
 	tools "github.com/yinyajiang/go-ytools/utils"
 )
 
-//AthServiceImpl ...
-type AthServiceImpl struct {
-	dev        mtunes.IOSDevice
+type serviceImpl struct {
+	dev        mtunes.Device
 	athConnect uintptr
 	proxy      AthProxy
 	status     string
 }
 
 //New ...
-func New(dev mtunes.IOSDevice, proxy AthProxy) (ath AthService, err error) {
+func New(dev mtunes.Device, proxy AthProxy) (ath Service, err error) {
 	if !dev.IsTrusted() {
 		err = fmt.Errorf("Device is not trusted")
 		return
 	}
 
-	ath = &AthServiceImpl{
+	ath = &serviceImpl{
 		dev:    dev,
 		proxy:  proxy,
 		status: "status_allowed",
@@ -36,7 +35,7 @@ func New(dev mtunes.IOSDevice, proxy AthProxy) (ath AthService, err error) {
 }
 
 //Dial ...
-func (ath *AthServiceImpl) Dial() (err error) {
+func (ath *serviceImpl) Dial() (err error) {
 	deviceIDface, ok := ath.dev.DeviceInfo()["uuid"]
 	if !ok {
 		return fmt.Errorf("deviceID is empty")
@@ -56,9 +55,17 @@ func (ath *AthServiceImpl) Dial() (err error) {
 	return
 }
 
-//Exec ...
-func (ath *AthServiceImpl) Exec(ctx context.Context) (err error) {
+//Serve ...
+func (ath *serviceImpl) Serve(ctx context.Context) (err error) {
+	defer func() {
+		if ath.athConnect != 0 {
+			iapi.ATHostConnectionClose(ath.athConnect)
+			ath.athConnect = 0
+		}
+	}()
+
 	msgChan := make(chan uintptr, 3)
+
 	recvLoopCtx, cancelRecvFun := context.WithCancel(ctx)
 
 	var wg sync.WaitGroup
@@ -68,8 +75,6 @@ func (ath *AthServiceImpl) Exec(ctx context.Context) (err error) {
 		ath.receiveLoop(recvLoopCtx, msgChan)
 		wg.Done()
 	}()
-
-	outDispatch := make(chan struct{}, 5)
 
 dispatchFor:
 	for {
@@ -81,24 +86,23 @@ dispatchFor:
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				err = ath.eventDispatch(ctx, outDispatch, msg)
-				if err != nil {
-					outDispatch <- struct{}{}
+				defer iapi.CFRelease(msg)
+				evErr := ath.eventDispatch(ctx, cancelRecvFun, msg)
+				if err == nil {
+					err = evErr
 				}
 			}()
 		case <-ctx.Done():
 			err = fmt.Errorf("Cancle")
 			break dispatchFor
-		case <-outDispatch:
-			break dispatchFor
 		}
 	}
 	cancelRecvFun()
 	wg.Wait()
-	return nil
+	return
 }
 
-func (ath *AthServiceImpl) receiveLoop(ctx context.Context, msgChan chan<- uintptr) {
+func (ath *serviceImpl) receiveLoop(ctx context.Context, msgChan chan<- uintptr) {
 	lastSleep := time.Now().Unix()
 	for {
 		msg := iapi.ATHostConnectionReadMessage(ath.athConnect)
@@ -118,55 +122,56 @@ func (ath *AthServiceImpl) receiveLoop(ctx context.Context, msgChan chan<- uintp
 		if strings.EqualFold(msgName, "Progress") {
 			if time.Now().Unix()-lastSleep > 20 {
 				time.Sleep(time.Millisecond * 1000)
+				lastSleep = time.Now().Unix()
 			}
 		}
 		msgChan <- msg
 	}
 }
 
-func (ath *AthServiceImpl) eventDispatch(ctx context.Context, recvFinish chan<- struct{}, msg uintptr) (err error) {
+func (ath *serviceImpl) eventDispatch(ctx context.Context, cancleFun context.CancelFunc, msg uintptr) (err error) {
 	//ignore message: Progress AssetMetrics InstalledAssets
-	defer iapi.CFRelease(msg)
+
+	defer func() {
+		if err != nil {
+			cancleFun()
+		}
+	}()
 
 	msgName := iapi.ATCFMessageGetName(msg)
-	if strings.EqualFold(msgName, "SyncFailed") {
-		return fmt.Errorf("Recive syncFailed")
-	}
-	if strings.EqualFold(msgName, "ConnectionInvalid") {
-		return fmt.Errorf("Recive ConnectionInvalid")
-	}
-	if strings.EqualFold(msgName, "Ping") {
+
+	switch msgName {
+	case "SyncFailed":
+		err = fmt.Errorf("Recive syncFailed")
+	case "ConnectionInvalid":
+		err = fmt.Errorf("Recive ConnectionInvalid")
+	case "SyncFinished":
+		cancleFun()
+	case "Ping":
 		iapi.ATHostConnectionSendPing(ath.athConnect)
-		return
-	}
-
-	if strings.EqualFold(msgName, "SyncFinished") {
-		recvFinish <- struct{}{}
-		return
-	}
-
-	if strings.EqualFold(msgName, "SyncAllowed") {
+	case "SyncAllowed":
 		if "status_allowed" != ath.status {
 			return
 		}
 		ath.status = "status_ready"
 		err = ath.allowEvent()
-	} else if strings.EqualFold(msgName, "ReadyForSync") {
+	case "ReadyForSync":
 		if "status_ready" != ath.status {
 			return
 		}
 		ath.status = "status_manifest"
 		err = ath.readyEvent(ctx, msg)
-	} else if strings.EqualFold(msgName, "AssetManifest") {
+	case "AssetManifest":
 		if "status_manifest" != ath.status {
 			return
 		}
 		err = ath.manifestEvent(ctx, msg)
 	}
+
 	return
 }
 
-func (ath *AthServiceImpl) allowEvent() (err error) {
+func (ath *serviceImpl) allowEvent() (err error) {
 	keybag, anchors := ath.proxy.GetKeybag()
 	if len(keybag) == 0 || len(anchors) == 0 {
 		return fmt.Errorf("GetKeybag is empty")
@@ -174,11 +179,12 @@ func (ath *AthServiceImpl) allowEvent() (err error) {
 	pl, err := responseAllowedProto(keybag, anchors)
 	sessionNum := iapi.ATHostConnectionGetCurrentSessionNumber(ath.athConnect)
 	rspMsg := iapi.ATCFMessageCreate(sessionNum, "RequestingSync", pl)
+
 	iapi.ATHostConnectionSendMessage(ath.athConnect, rspMsg)
 	return
 }
 
-func (ath *AthServiceImpl) readyEvent(ctx context.Context, msg uintptr) (err error) {
+func (ath *serviceImpl) readyEvent(ctx context.Context, msg uintptr) (err error) {
 	plmsg := iapi.CFToPlist(msg)
 	keybag, _ := ath.proxy.GetKeybag()
 
@@ -197,11 +203,12 @@ func (ath *AthServiceImpl) readyEvent(ctx context.Context, msg uintptr) (err err
 	if err != nil {
 		return
 	}
+
 	iapi.ATHostConnectionSendMetadataSyncFinished(ath.athConnect, p1, p2)
 	return
 }
 
-func (ath *AthServiceImpl) manifestEvent(ctx context.Context, msg uintptr) (err error) {
+func (ath *serviceImpl) manifestEvent(ctx context.Context, msg uintptr) (err error) {
 	plmsg := iapi.CFToPlist(msg)
 	keybag, _ := ath.proxy.GetKeybag()
 
@@ -217,16 +224,26 @@ func (ath *AthServiceImpl) manifestEvent(ctx context.Context, msg uintptr) (err 
 			return
 		default:
 		}
-
-		r, size, err := ath.proxy.OpenEntityReader(assetID)
-		if err != nil {
+		if !ath.proxy.IsExistAsset(assetID) {
+			iapi.ATHostConnectionSendFileError(ath.athConnect, assetID, keybag, 3)
 			continue
 		}
-		w, notify, err := ath.proxy.OpenEntityWriter(assetID)
-		if err != nil {
+		r, size, openErr := ath.proxy.OpenAssetReader(assetID)
+		if openErr != nil {
+			iapi.ATHostConnectionSendFileError(ath.athConnect, assetID, keybag, 3)
+			err = openErr
+			ath.proxy.AssetFinish(assetID, false)
+			continue
+		}
+		w, notify, openErr := ath.proxy.OpenAssetWriter(assetID)
+		if openErr != nil {
 			r.Close()
+			iapi.ATHostConnectionSendFileError(ath.athConnect, assetID, keybag, 3)
+			err = openErr
+			ath.proxy.AssetFinish(assetID, false)
 			continue
 		}
+
 		_, err = tools.CopyFun(ctx, size, w, r, func(total int64, prog float64) {
 			iapi.ATHostConnectionSendFileProgress(ath.athConnect,
 				assetID,
@@ -239,8 +256,10 @@ func (ath *AthServiceImpl) manifestEvent(ctx context.Context, msg uintptr) (err 
 		r.Close()
 		if err != nil {
 			iapi.ATHostConnectionSendFileError(ath.athConnect, assetID, keybag, 3)
+			ath.proxy.AssetFinish(assetID, false)
 		} else {
 			iapi.ATHostConnectionSendAssetCompleted(ath.athConnect, assetID, keybag, notify)
+			ath.proxy.AssetFinish(assetID, true)
 		}
 	}
 	return

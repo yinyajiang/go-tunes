@@ -2,8 +2,8 @@ package mtunes
 
 import "context"
 
-//IOSDevice ...
-type IOSDevice interface {
+//Device ...
+type Device interface {
 	Mode() string
 	ID() string
 	ECID() string
@@ -28,4 +28,6 @@ type IOSDevice interface {
 	GetStartService(name string) (conn uintptr, err error)
 	IsServiceRuning(name string) bool
 	StopService(name string)
+
+	Release()
 }

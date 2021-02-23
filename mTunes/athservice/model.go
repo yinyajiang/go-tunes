@@ -8,14 +8,15 @@ import (
 //AthProxy ...
 type AthProxy interface {
 	SubmitReadyPlist(syncNum string, grapa []byte) error
-	OpenEntityReader(entityID string) (r io.ReadCloser, size int64, err error)
-	OpenEntityWriter(entityID string) (w io.WriteCloser, target string, err error)
-	TransferFinish(entityID string)
+	IsExistAsset(entityID string) bool
+	OpenAssetReader(entityID string) (r io.ReadCloser, size int64, err error)
+	OpenAssetWriter(entityID string) (w io.WriteCloser, target string, err error)
+	AssetFinish(entityID string, successed bool)
 	GetKeybag() (keybag string, anchors []string)
 }
 
-//AthService ...
-type AthService interface {
+//Service ...
+type Service interface {
 	Dial() (err error)
-	Exec(ctx context.Context) (err error)
+	Serve(ctx context.Context) (err error)
 }

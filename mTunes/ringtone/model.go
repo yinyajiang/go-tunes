@@ -19,11 +19,12 @@ type TrackInfo struct {
 	Size      int64
 
 	isDeleted bool
+	isInvalid bool
 
 	//fake
 	isFake      bool
 	fakeSrcPath string
-	dev         mtunes.IOSDevice
+	dev         mtunes.Device
 }
 
 //ImportTrackInfo ...
@@ -31,13 +32,13 @@ type ImportTrackInfo struct {
 	Name      string
 	TotalTime uint64
 	Size      int64
-	Dev       mtunes.IOSDevice
+	Dev       mtunes.Device
 	SrcPath   string
 }
 
 //Manager ...
 type Manager interface {
-	LoadTrack() (ret map[uint64]*TrackInfo, err error)
+	LoadTrack() (ret []TrackInfo, err error)
 	ImportTrack(base ImportTrackInfo)
 	DeleteTrack(pid uint64)
 	Commit(ctx context.Context) error

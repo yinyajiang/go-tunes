@@ -8,16 +8,15 @@ import (
 	mtunes "github.com/yinyajiang/go-tunes/mTunes"
 )
 
-//DeviceFileImpl ...
-type DeviceFileImpl struct {
+type fileImpl struct {
 	hand       uint64
 	afcConnect uintptr
 	info       *FileInfo
-	dev        mtunes.IOSDevice
+	dev        mtunes.Device
 }
 
 //Read ...
-func (f *DeviceFileImpl) Read(p []byte) (readed int, err error) {
+func (f *fileImpl) Read(p []byte) (readed int, err error) {
 	if f.hand == 0 {
 		err = fmt.Errorf("File hand is 0")
 		return
@@ -37,7 +36,7 @@ func (f *DeviceFileImpl) Read(p []byte) (readed int, err error) {
 		if read > 1024*1024*4 {
 			read = 1024 * 1024 * 4
 		}
-		oneReaded, res := iapi.AFCFileRefRead(f.afcConnect, f.hand, p[readed:read])
+		oneReaded, res := iapi.AFCFileRefRead(f.afcConnect, f.hand, p[readed:readed+read])
 		if res != 0 {
 			err = fmt.Errorf("Afc Read fail")
 			break
@@ -52,7 +51,7 @@ func (f *DeviceFileImpl) Read(p []byte) (readed int, err error) {
 }
 
 //Close ...
-func (f *DeviceFileImpl) Close() (err error) {
+func (f *fileImpl) Close() (err error) {
 	if f.hand != 0 {
 		iapi.AFCFileRefClose(f.afcConnect, f.hand)
 		f.hand = 0
@@ -61,7 +60,7 @@ func (f *DeviceFileImpl) Close() (err error) {
 }
 
 //Write ...
-func (f *DeviceFileImpl) Write(p []byte) (writen int, err error) {
+func (f *fileImpl) Write(p []byte) (writen int, err error) {
 	if f.hand == 0 {
 		err = fmt.Errorf("File hand is 0")
 		return
@@ -81,7 +80,7 @@ func (f *DeviceFileImpl) Write(p []byte) (writen int, err error) {
 		if write > 1024*1024*4 {
 			write = 1024 * 1024 * 4
 		}
-		res := iapi.AFCFileRefWrite(f.afcConnect, f.hand, p[writen:write])
+		res := iapi.AFCFileRefWrite(f.afcConnect, f.hand, p[writen:writen+write])
 		if res != 0 {
 			err = fmt.Errorf("Afc Write fail")
 			break
@@ -92,7 +91,7 @@ func (f *DeviceFileImpl) Write(p []byte) (writen int, err error) {
 }
 
 //Seek ...
-func (f *DeviceFileImpl) Seek(offset int64, whence int) (curSeek int64, err error) {
+func (f *fileImpl) Seek(offset int64, whence int) (curSeek int64, err error) {
 	if f.hand == 0 {
 		err = fmt.Errorf("File hand is 0")
 		return
@@ -116,7 +115,7 @@ func (f *DeviceFileImpl) Seek(offset int64, whence int) (curSeek int64, err erro
 }
 
 //ReadAt ...
-func (f *DeviceFileImpl) ReadAt(p []byte, off int64) (n int, err error) {
+func (f *fileImpl) ReadAt(p []byte, off int64) (n int, err error) {
 	if f.hand == 0 {
 		err = fmt.Errorf("File hand is 0")
 		return
@@ -129,7 +128,7 @@ func (f *DeviceFileImpl) ReadAt(p []byte, off int64) (n int, err error) {
 }
 
 //WriteAt ...
-func (f *DeviceFileImpl) WriteAt(p []byte, off int64) (n int, err error) {
+func (f *fileImpl) WriteAt(p []byte, off int64) (n int, err error) {
 	if f.hand == 0 {
 		err = fmt.Errorf("File hand is 0")
 		return

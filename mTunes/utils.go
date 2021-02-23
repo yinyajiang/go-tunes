@@ -31,6 +31,7 @@ func UnmashalPlist(data []byte, v interface{}) (format string, err error) {
 
 //MashalPlist ...
 func MashalPlist(v interface{}) ([]byte, error) {
+	//return plist.Marshal(v, plist.XMLFormat)
 	return plist.Marshal(v, plist.BinaryFormat)
 }
 

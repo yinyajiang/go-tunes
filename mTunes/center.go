@@ -10,13 +10,13 @@ import (
 
 //NotifyEvent ...
 type NotifyEvent struct {
-	Device IOSDevice
-	Event  string
+	Dev   Device
+	Event string
 }
 
 var (
 	devMutex          sync.Mutex
-	devices           map[string]*IOSDeviceImpl     = make(map[string]*IOSDeviceImpl, 2)
+	devices           map[string]*deviceImpl        = make(map[string]*deviceImpl, 2)
 	extractCancleFuns map[string]context.CancelFunc = make(map[string]context.CancelFunc, 2)
 	subMutex          sync.Mutex
 	subChans          map[chan *NotifyEvent]struct{} = make(map[chan *NotifyEvent]struct{}, 2)
@@ -38,10 +38,10 @@ func StopEventLoop() {
 	iapi.RunLoopStop()
 }
 
-//OnceEventLoopForWaitDevice 为指定设备启动一次事件循环
-func OnceEventLoopForWaitDevice(ctx context.Context, id string) (dev IOSDevice) {
+//OnceForWaitDevice ...
+func OnceForWaitDevice(ctx context.Context, id string) (dev Device) {
 	subscription(false)
-	dev = WaitForDevice(ctx, id)
+	dev = waitForDevice(ctx, id)
 	return
 }
 
@@ -61,8 +61,7 @@ func DeviceCount() int {
 	return len(devices)
 }
 
-//WaitForDevice ...
-func WaitForDevice(ctx context.Context, id string) (dev IOSDevice) {
+func waitForDevice(ctx context.Context, id string) (dev Device) {
 	for dev == nil {
 		devMutex.Lock()
 		devImpl, ok := devices[id]
@@ -109,15 +108,15 @@ func subscription(retChan bool) (subChan <-chan *NotifyEvent) {
 }
 
 func deviceEvent(even, mode string, modeDevice, restorableDevice uintptr) {
-	var dev *IOSDeviceImpl
+	var dev *deviceImpl
 	devMutex.Lock()
 	if even == "insert" {
 		extractCtx, cancleFun := context.WithCancel(context.Background())
-		dev = NewIOSDeviceImpl(extractCtx, mode, modeDevice, restorableDevice)
+		dev = newDeviceImpl(extractCtx, mode, modeDevice, restorableDevice)
 		devices[dev.ID()] = dev
 		extractCancleFuns[dev.ID()] = cancleFun
 	} else {
-		dev = NewIOSDeviceImpl(nil, mode, modeDevice, restorableDevice)
+		dev = newDeviceImpl(nil, mode, modeDevice, restorableDevice)
 		delDev, ok := devices[dev.ID()]
 		if ok {
 			extractCancleFuns[delDev.ID()]()
@@ -133,8 +132,8 @@ func deviceEvent(even, mode string, modeDevice, restorableDevice uintptr) {
 	for c := range tempSubChans {
 		select {
 		case c <- &NotifyEvent{
-			Event:  even,
-			Device: dev,
+			Event: even,
+			Dev:   dev,
 		}:
 		case <-time.After(time.Second * 2):
 		}

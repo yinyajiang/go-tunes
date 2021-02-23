@@ -1,7 +1,6 @@
 package ringtone
 
 import (
-	"fmt"
 	"time"
 
 	mtunes "github.com/yinyajiang/go-tunes/mTunes"
@@ -10,8 +9,8 @@ import (
 /*
 /iTunes_Control/Sync/Media/
 */
-func operaitionsProto() []byte {
-	return []byte(`
+func operaitionsProto(syncNum int) []byte {
+	proto := []byte(`
 	<?xml version="1.0" encoding="UTF-8"?>
 	<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 	<plist version="1.0">
@@ -41,6 +40,16 @@ func operaitionsProto() []byte {
 	</dict>
 	</plist>
 	`)
+	stProto := struct {
+		Revision   int                      `plist:"revision"`
+		Timestamp  time.Time                `plist:"timestamp"`
+		Operations []map[string]interface{} `plist:"operations"`
+	}{}
+	mtunes.UnmashalPlist(proto, &stProto)
+	stProto.Timestamp = time.Now()
+	stProto.Revision = syncNum
+	proto, _ = mtunes.MashalPlist(stProto)
+	return proto
 }
 
 /*
@@ -108,7 +117,7 @@ func operaitionsProto() []byte {
 </plist>
 */
 func mashalUpdateProto(syncNum int, inserts, dels []*TrackInfo) (plist []byte, err error) {
-	oppl := operaitionsProto()
+	oppl := operaitionsProto(syncNum)
 
 	stProto := struct {
 		Revision   int                      `plist:"revision"`
@@ -119,8 +128,6 @@ func mashalUpdateProto(syncNum int, inserts, dels []*TrackInfo) (plist []byte, e
 	if err != nil {
 		return
 	}
-	stProto.Timestamp = time.Now().UTC()
-	stProto.Revision = syncNum
 
 	for _, delInfo := range dels {
 		del := make(map[string]interface{}, 4)
@@ -149,9 +156,6 @@ func mashalUpdateProto(syncNum int, inserts, dels []*TrackInfo) (plist []byte, e
 
 		stProto.Operations = append(stProto.Operations, ins)
 	}
-
-	s, _ := mtunes.MashalPlistString(stProto)
-	fmt.Println(s)
 	plist, err = mtunes.MashalPlist(stProto)
 	return
 }

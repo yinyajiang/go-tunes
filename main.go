@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	dev := mtunes.OnceEventLoopForWaitDevice(context.Background(), "2873943352410158")
+	dev := mtunes.OnceForWaitDevice(context.Background(), "2873943352410158")
 	if dev == nil {
 		fmt.Println("Not found dev")
 		return
@@ -20,22 +20,32 @@ func main() {
 		return
 	}
 
-	base := ringtone.ImportTrackInfo{
-		Name:      "case0_山丹丹开花红艳艳",
-		TotalTime: 242284,
-		Size:      10780022,
-		SrcPath:   "/Volumes/192.168.0.85/test file/case0_山丹丹开花红艳艳.mp3",
-	}
-	mgr.ImportTrack(base)
-	mgr.Commit(context.Background())
-
 	tracks, err := mgr.LoadTrack()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	for _, t := range tracks {
-		fmt.Println(*t)
+		fmt.Println(t)
 	}
+
+	base := ringtone.ImportTrackInfo{
+		Name:      "没诶13",
+		TotalTime: 242284,
+		Size:      10780022,
+		SrcPath:   "/Users/new/Documents/Temp/贰佰 - 玫瑰 [mqms2] [高质量].m4r",
+	}
+	mgr.ImportTrack(base)
+	mgr.Commit(context.Background())
+
+	tracks, err = mgr.LoadTrack()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	for _, t := range tracks {
+		fmt.Println(t)
+	}
+	fmt.Println("Finish")
 
 }

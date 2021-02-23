@@ -30,7 +30,7 @@ func CFToPlist(cf uintptr) (data []byte) {
 	if plistbuff == nil || len == 0 {
 		return nil
 	}
-	data = (*[1 << 30]byte)(unsafe.Pointer(plistbuff))[0:len:len]
+	data = (*[1 << 29]byte)(unsafe.Pointer(plistbuff))[0:len:len]
 	return
 }
 

@@ -46,8 +46,8 @@ type File interface {
 	io.WriterAt
 }
 
-//FileService ...
-type FileService interface {
+//Service ...
+type Service interface {
 	GetFileInfo(path string) *FileInfo
 	IsFileExist(path string) bool
 	PathWalk(dir string, dirFun func(path string, info *FileInfo, postName string) bool)
@@ -56,4 +56,5 @@ type FileService interface {
 	OpenFile(path string, mode int64) (File, error)
 	ReadFileAll(path string) ([]byte, error)
 	WriteFileAll(path string, data []byte) error
+	Release()
 }

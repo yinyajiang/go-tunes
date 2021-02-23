@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	mtunes "github.com/yinyajiang/go-tunes/mTunes"
+	"github.com/yinyajiang/go-tunes/mTunes/fileservice"
 )
 
 /*
@@ -45,7 +46,7 @@ import (
 */
 
 //Parse ...
-func Parse(db []byte) (ret map[uint64]*TrackInfo) {
+func Parse(db []byte, fs fileservice.Service) (retAll map[uint64]*TrackInfo, nameSet, fileNameSet map[string]struct{}) {
 	type plItemInfo map[string]interface{}
 	stRoot := struct {
 		Ringtones map[string]plItemInfo `plist:"Ringtones"`
@@ -90,8 +91,12 @@ func Parse(db []byte) (ret map[uint64]*TrackInfo) {
 		return
 	}
 
-	ret = make(map[uint64]*TrackInfo, 0)
+	retAll = make(map[uint64]*TrackInfo, 0)
+	nameSet = make(map[string]struct{}, 0)
+	fileNameSet = make(map[string]struct{}, 0)
+
 	for key, infoMap := range stRoot.Ringtones {
+
 		info := &TrackInfo{
 			FileName:  key,
 			Name:      _str(&infoMap, "Name"),
@@ -101,7 +106,17 @@ func Parse(db []byte) (ret map[uint64]*TrackInfo) {
 			Protected: _bool(&infoMap, "Protected Content"),
 			Path:      "/iTunes_Control/Ringtones/" + key,
 		}
-		ret[info.PID] = info
+
+		finfo := fs.GetFileInfo(info.Path)
+		if finfo == nil {
+			info.isInvalid = true
+			info.Path = ""
+		} else {
+			info.Size = finfo.Size
+		}
+		nameSet[info.Name] = struct{}{}
+		fileNameSet[info.FileName] = struct{}{}
+		retAll[info.PID] = info
 	}
 	return
 }
