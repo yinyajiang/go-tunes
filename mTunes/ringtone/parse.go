@@ -46,7 +46,7 @@ import (
 */
 
 //Parse ...
-func Parse(db []byte, fs fileservice.Service) (retAll map[uint64]*TrackInfo, nameSet, fileNameSet map[string]struct{}) {
+func Parse(db []byte, purchased bool, fs fileservice.Service) (retAll map[uint64]*TrackInfo, nameSet, fileNameSet map[string]struct{}) {
 	type plItemInfo map[string]interface{}
 	stRoot := struct {
 		Ringtones map[string]plItemInfo `plist:"Ringtones"`
@@ -104,8 +104,13 @@ func Parse(db []byte, fs fileservice.Service) (retAll map[uint64]*TrackInfo, nam
 			TotalTime: _num(&infoMap, "Total Time"),
 			PID:       _num(&infoMap, "PID"),
 			Protected: _bool(&infoMap, "Protected Content"),
-			Path:      "/iTunes_Control/Ringtones/" + key,
 		}
+		if purchased {
+			info.Path = "/Purchases/" + key
+		} else {
+			info.Path = "/iTunes_Control/Ringtones/" + key
+		}
+		info.Purchased = purchased
 
 		finfo := fs.GetFileInfo(info.Path)
 		if finfo == nil {

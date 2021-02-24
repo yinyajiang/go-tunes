@@ -60,7 +60,23 @@ func (m *managerImpl) LoadTrack() (ret []TrackInfo, err error) {
 	if err != nil {
 		return
 	}
-	m.tracks, m.nameSet, m.fileNameSet = Parse(pl, fs)
+	m.tracks, m.nameSet, m.fileNameSet = Parse(pl, false, fs)
+
+	//purchased
+	pl, err = fs.ReadFileAll("/Purchases/Ringtones.plist")
+	if err != nil {
+		return
+	}
+	purtracks, purnameSet, purfileNameSet := Parse(pl, true, fs)
+	for p, t := range purtracks {
+		m.tracks[p] = t
+	}
+	for n, p := range purnameSet {
+		m.nameSet[n] = p
+	}
+	for n, p := range purfileNameSet {
+		m.fileNameSet[n] = p
+	}
 	return
 }
 
@@ -138,12 +154,34 @@ func (m *managerImpl) DeleteTrack(pid uint64) {
 
 //Commit ...
 func (m *managerImpl) Commit(ctx context.Context) (err error) {
+	fs, err := fileservice.New(m.dev)
+	if err != nil {
+		return
+	}
+	defer func() {
+		fs.Release()
+		m.LoadTrack()
+	}()
+
+	m.deleteFake()
+	err = m.deletePurchased(fs)
+	if err != nil {
+		return
+	}
+
+	err = m.commitAth(ctx, fs)
+	return
+}
+
+func (m *managerImpl) deleteFake() {
 	for pid, track := range m.tracks {
 		if track.isFake && track.isDeleted {
 			delete(m.tracks, pid)
 		}
 	}
+}
 
+func (m *managerImpl) commitAth(ctx context.Context, fs fileservice.Service) (err error) {
 	inserts := make(map[uint64]*TrackInfo, 0)
 	dels := make(map[uint64]*TrackInfo, 0)
 	for pid, track := range m.tracks {
@@ -156,14 +194,6 @@ func (m *managerImpl) Commit(ctx context.Context) (err error) {
 	if len(inserts) == 0 && len(dels) == 0 {
 		return
 	}
-
-	fs, err := fileservice.New(m.dev)
-	if err != nil {
-		return
-	}
-	defer func() {
-		fs.Release()
-	}()
 	ath, err := athservice.New(m.dev, &syncProxy{
 		inserts: inserts,
 		dels:    dels,
@@ -177,19 +207,59 @@ func (m *managerImpl) Commit(ctx context.Context) (err error) {
 		return
 	}
 	err = ath.Serve(ctx)
+	return
+}
 
-	//remove name set
-	if err == nil {
-		for _, track := range m.tracks {
-			if track.isDeleted {
-				delete(m.fileNameSet, track.FileName)
-				delete(m.nameSet, track.Name)
+func (m *managerImpl) deletePurchased(fs fileservice.Service) (err error) {
+	hasDelete := false
+	for _, track := range m.tracks {
+		if track.Purchased && track.isDeleted {
+			hasDelete = true
+			break
+		}
+	}
+	if !hasDelete {
+		return
+	}
+
+	var stPurchased map[string]map[string]interface{}
+	pl, err := fs.ReadFileAll("/Purchases/Ringtones.plist")
+	if err != nil {
+		return
+	}
+	_, err = mtunes.UnmashalPlist(pl, &stPurchased)
+	if err != nil {
+		return
+	}
+
+	deletePlistFun := func(key string) error {
+		tones, ok := stPurchased["Ringtones"]
+		if !ok {
+			return fmt.Errorf("Not find ringtones dict")
+		}
+		_, ok = tones[key]
+		if !ok {
+			return fmt.Errorf("Not find item dict")
+		}
+		delete(tones, key)
+		return nil
+	}
+	for pid, track := range m.tracks {
+		if track.Purchased && track.isDeleted {
+			fs.RemovePath(track.Path)
+			err = deletePlistFun(track.FileName)
+			if err != nil {
+				return
 			}
+			delete(m.tracks, pid)
 		}
 	}
 
-	m.LoadTrack()
-	return
+	pl, err = mtunes.MashalPlist(stPurchased)
+	if err != nil {
+		return
+	}
+	return fs.WriteFileAll("/Purchases/Ringtones.plist", pl)
 }
 
 func gen16bitGUID() string {

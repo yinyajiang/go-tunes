@@ -17,6 +17,7 @@ type TrackInfo struct {
 	Path      string
 	Protected bool
 	Size      int64
+	Purchased bool
 
 	isDeleted bool
 	isInvalid bool

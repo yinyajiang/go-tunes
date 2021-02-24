@@ -187,7 +187,7 @@ func (svc *serviceImpl) ReadFileAll(path string) (data []byte, err error) {
 
 //WriteFileAll ...
 func (svc *serviceImpl) WriteFileAll(path string, data []byte) (err error) {
-	svc.CreateDirectorys(tools.AbsPath(path))
+	svc.CreateDirectorys(tools.AbsParent(path))
 	f, err := svc.OpenFile(path, AFC_FOPEN_WRONLY)
 	if err != nil {
 		return
