@@ -11,6 +11,10 @@ import (
 	iapi "github.com/yinyajiang/go-tunes/iTunesApi"
 )
 
+const (
+	serviceUserDataSuffix = "_#@Service_Conn@#_"
+)
+
 type deviceImpl struct {
 	mode           string
 	modeDevice     uintptr
@@ -87,7 +91,7 @@ func (dev *deviceImpl) GetStartService(name string) (conn uintptr, err error) {
 		return
 	}
 
-	conn, ok := dev.GetUserData(name + "_#@Service_Conn@#_").(uintptr)
+	conn, ok := dev.GetUserData(serviceUserDataKey(name)).(uintptr)
 	if ok {
 		return
 	}
@@ -102,7 +106,7 @@ func (dev *deviceImpl) GetStartService(name string) (conn uintptr, err error) {
 		err = fmt.Errorf("Start %s service fail", name)
 		return
 	}
-	dev.SaveUserData(name+"_#@Service_Conn@#_", conn)
+	dev.SaveUserData(serviceUserDataKey(name), conn)
 	return
 }
 
@@ -111,26 +115,28 @@ func (dev *deviceImpl) Release() {
 	tmpData := dev.userData
 	dev.userLock.RUnlock()
 	for k := range tmpData {
-		if !strings.HasSuffix(k, "_#@Service_Conn@#_") {
+		if !strings.HasSuffix(k, serviceUserDataSuffix) {
 			continue
 		}
-		nm := k[0 : len(k)-len("_#@Service_Conn@#_")]
+		nm := k[0 : len(k)-len(serviceUserDataSuffix)]
 		dev.StopService(nm)
 	}
 }
 
 //IsServiceRuning ...
 func (dev *deviceImpl) IsServiceRuning(name string) bool {
-	_, ok := dev.GetUserData(name + "_conn").(uintptr)
+	_, ok := dev.GetUserData(serviceUserDataKey(name)).(uintptr)
 	return ok
 }
 
 //StopService ...
 func (dev *deviceImpl) StopService(name string) {
-	conn, ok := dev.GetUserData(name + "_conn").(uintptr)
+	conn, ok := dev.GetUserData(serviceUserDataKey(name)).(uintptr)
 	if ok {
-		iapi.AMDServiceConnectionInvalidate(conn)
-
+		if name != "com.apple.afc" {
+			iapi.AMDServiceConnectionInvalidate(conn)
+		}
+		dev.DeleteUserData(serviceUserDataKey(name))
 	}
 }
 
@@ -390,4 +396,8 @@ func (dev *deviceImpl) disconnect() {
 	}
 	dev.connected = false
 	iapi.AMDeviceDisconnect(dev.ModeDevice())
+}
+
+func serviceUserDataKey(nm string) string {
+	return nm + serviceUserDataSuffix
 }

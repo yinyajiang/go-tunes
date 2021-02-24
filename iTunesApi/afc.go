@@ -117,14 +117,15 @@ func AFCRenamePath(conn uintptr, oldpath, newpath string) int {
 		unsafe.Pointer(cnewpath)))
 }
 
-func AFCFileRefOpen(conn uintptr, path string, mode int64) (fileHand uint64) {
+//AFCFileRefOpen ...
+func AFCFileRefOpen(conn uintptr, path string, mode int64) (fileHand uint64, res int32) {
 	cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(cpath))
 
-	C.AFCFileRefOpen(unsafe.Pointer(conn),
+	res = int32(C.AFCFileRefOpen(unsafe.Pointer(conn),
 		unsafe.Pointer(cpath),
 		C.ulonglong(mode),
-		(*C.ulonglong)(unsafe.Pointer(&fileHand)))
+		(*C.ulonglong)(unsafe.Pointer(&fileHand))))
 	return
 }
 

@@ -161,7 +161,7 @@ func (svc *serviceImpl) OpenFile(path string, mode int64) (f File, err error) {
 	if mode == AFC_FOPEN_WRONLY {
 		svc.RemovePath(path)
 	}
-	fhand := iapi.AFCFileRefOpen(svc.afcConnect, path, mode)
+	fhand, _ := iapi.AFCFileRefOpen(svc.afcConnect, path, mode)
 	if 0 == fhand {
 		err = fmt.Errorf("Open %s fail", path)
 		return
@@ -200,6 +200,7 @@ func (svc *serviceImpl) WriteFileAll(path string, data []byte) (err error) {
 //Release ...
 func (svc *serviceImpl) Release() {
 	if 0 != svc.afcConnect {
+		svc.dev.StopService("com.apple.afc")
 		iapi.AFCConnectionClose(svc.afcConnect)
 		svc.afcConnect = 0
 	}

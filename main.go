@@ -19,8 +19,14 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
 	tracks, err := mgr.LoadTrack()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(len(tracks))
+
+	tracks, err = mgr.LoadTrack()
 	if err != nil {
 		fmt.Println(err)
 		return
