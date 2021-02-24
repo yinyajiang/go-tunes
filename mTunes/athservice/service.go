@@ -59,7 +59,8 @@ func (ath *serviceImpl) Dial() (err error) {
 func (ath *serviceImpl) Serve(ctx context.Context) (err error) {
 	defer func() {
 		if ath.athConnect != 0 {
-			iapi.ATHostConnectionClose(ath.athConnect)
+			iapi.ATHostConnectionInvalidate(ath.athConnect)
+			iapi.ATHostConnectionRelease(ath.athConnect)
 			ath.athConnect = 0
 		}
 	}()

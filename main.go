@@ -25,9 +25,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	for _, t := range tracks {
-		fmt.Println(t)
-	}
+	fmt.Println(len(tracks))
 
 	base := ringtone.ImportTrackInfo{
 		Name:      "没诶13",
@@ -43,9 +41,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	for _, t := range tracks {
-		fmt.Println(t)
-	}
+	fmt.Println(len(tracks))
 	fmt.Println("Finish")
 
 }
