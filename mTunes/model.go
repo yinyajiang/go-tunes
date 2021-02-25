@@ -29,5 +29,7 @@ type Device interface {
 	IsServiceRuning(name string) bool
 	StopService(name string)
 
+	WorkDir(join string) string
+
 	Release()
 }

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	iapi "github.com/yinyajiang/go-tunes/iTunesApi"
+	tools "github.com/yinyajiang/go-ytools/utils"
 )
 
 const (
@@ -293,6 +294,11 @@ func (dev *deviceImpl) IsExtract() bool {
 //ExtrackContext ...
 func (dev *deviceImpl) ExtrackContext() context.Context {
 	return dev.extractCtx
+}
+
+//ExtrackContext ...
+func (dev *deviceImpl) WorkDir(join string) string {
+	return tools.TempPath(tools.AbsJoinPath(dev.ID(), join))
 }
 
 func (dev *deviceImpl) loadBaseInfo() error {

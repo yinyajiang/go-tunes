@@ -244,14 +244,15 @@ func (m *managerImpl) deletePurchased(fs fileservice.Service) (err error) {
 		delete(tones, key)
 		return nil
 	}
-	for pid, track := range m.tracks {
+	for _, track := range m.tracks {
 		if track.Purchased && track.isDeleted {
 			fs.RemovePath(track.Path)
 			err = deletePlistFun(track.FileName)
 			if err != nil {
 				return
 			}
-			delete(m.tracks, pid)
+			//不删除，仍然走一次后面的同步流程
+			//delete(m.tracks, pid)
 		}
 	}
 
