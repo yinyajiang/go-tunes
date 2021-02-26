@@ -2,6 +2,7 @@ package mtunes
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 
@@ -64,6 +65,12 @@ func DeviceCount() int {
 func waitForDevice(ctx context.Context, id string) (dev Device) {
 	for dev == nil {
 		devMutex.Lock()
+		//转成10进制
+		idInt, err := strconv.ParseInt(id, 0, 64)
+		if err != nil {
+			return nil
+		}
+		id = strconv.FormatInt(idInt, 10)
 		devImpl, ok := devices[id]
 		devMutex.Unlock()
 
