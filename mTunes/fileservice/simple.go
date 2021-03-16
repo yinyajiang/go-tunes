@@ -1,6 +1,6 @@
 package fileservice
 
-import mtunes "github.com/yinyajiang/go-tunes/mTunes"
+import mtunes "github.com/yinyajiang/go-tunes/mtunes"
 
 //ReadFileAll ...
 func ReadFileAll(dev mtunes.Device, path string) (data []byte, err error) {

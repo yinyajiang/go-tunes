@@ -10,7 +10,7 @@ import "C"
 import (
 	"unsafe"
 
-	iapi "github.com/yinyajiang/go-tunes/iTunesApi"
+	iapi "github.com/yinyajiang/go-tunes/itunesapi"
 )
 
 //CigCalc 计算同步Plist的cig值

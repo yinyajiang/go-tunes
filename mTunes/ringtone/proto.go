@@ -3,7 +3,7 @@ package ringtone
 import (
 	"time"
 
-	mtunes "github.com/yinyajiang/go-tunes/mTunes"
+	mtunes "github.com/yinyajiang/go-tunes/mtunes"
 )
 
 /*

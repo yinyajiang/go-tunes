@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	iapi "github.com/yinyajiang/go-tunes/iTunesApi"
+	iapi "github.com/yinyajiang/go-tunes/itunesapi"
 	tools "github.com/yinyajiang/go-ytools/utils"
 )
 

@@ -3,21 +3,21 @@ package ringtone
 import (
 	"context"
 
-	mtunes "github.com/yinyajiang/go-tunes/mTunes"
+	mtunes "github.com/yinyajiang/go-tunes/mtunes"
 )
 
 //TrackInfo ...
 type TrackInfo struct {
 	//base
-	FileName  string
-	Name      string
-	GUID      string
-	TotalTime uint64
-	PID       uint64
-	Path      string
-	Protected bool
-	Size      int64
-	Purchased bool
+	FileName  string `json:"fileName"`
+	Name      string `json:"name"`
+	GUID      string `json:"guid"`
+	TotalTime uint64 `json:"totalTime"`
+	PID       uint64 `json:"pid"`
+	Path      string `json:"path"`
+	Protected bool   `json:"protected"`
+	Size      int64  `json:"size"`
+	Purchased bool   `json:"purchased"`
 
 	isDeleted bool
 	isInvalid bool

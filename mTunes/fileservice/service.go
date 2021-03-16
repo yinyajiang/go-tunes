@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	iapi "github.com/yinyajiang/go-tunes/iTunesApi"
-	mtunes "github.com/yinyajiang/go-tunes/mTunes"
+	iapi "github.com/yinyajiang/go-tunes/itunesapi"
+	mtunes "github.com/yinyajiang/go-tunes/mtunes"
 	tools "github.com/yinyajiang/go-ytools/utils"
 )
 

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	iapi "github.com/yinyajiang/go-tunes/iTunesApi"
+	iapi "github.com/yinyajiang/go-tunes/itunesapi"
 )
 
 //NotifyEvent ...
@@ -23,6 +23,11 @@ var (
 	subChans          map[chan *NotifyEvent]struct{} = make(map[chan *NotifyEvent]struct{}, 2)
 	iapiSub           bool
 )
+
+//SetWinDllDir only for winodws
+func SetWinDllDir(dir string) {
+	iapi.SetWinDllDir(dir)
+}
 
 //SubscriptionDeviceNotify ...
 func SubscriptionDeviceNotify() (subChan <-chan *NotifyEvent) {

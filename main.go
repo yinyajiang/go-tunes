@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	mtunes "github.com/yinyajiang/go-tunes/mTunes"
-	"github.com/yinyajiang/go-tunes/mTunes/ringtone"
+	mtunes "github.com/yinyajiang/go-tunes/mtunes"
+	"github.com/yinyajiang/go-tunes/mtunes/ringtone"
 )
 
 func main() {
