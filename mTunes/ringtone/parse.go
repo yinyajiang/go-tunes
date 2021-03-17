@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	mtunes "github.com/yinyajiang/go-tunes/mtunes"
-	"github.com/yinyajiang/go-tunes/mTunes/fileservice"
+	"github.com/yinyajiang/go-tunes/mtunes/fileservice"
 )
 
 /*
