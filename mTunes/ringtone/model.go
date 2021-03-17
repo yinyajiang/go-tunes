@@ -9,12 +9,12 @@ import (
 //TrackInfo ...
 type TrackInfo struct {
 	//base
-	FileName  string `json:"fileName"`
+	FileName  string `json:"-"`
 	Name      string `json:"name"`
-	GUID      string `json:"guid"`
-	TotalTime uint64 `json:"totalTime"`
+	GUID      string `json:"-"`
+	TotalTime uint64 `json:"duration"`
 	PID       uint64 `json:"pid"`
-	Path      string `json:"path"`
+	Path      string `json:"-"`
 	Protected bool   `json:"protected"`
 	Size      int64  `json:"size"`
 	Purchased bool   `json:"purchased"`

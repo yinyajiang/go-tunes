@@ -65,6 +65,7 @@ func (m *managerImpl) LoadTrack() (ret []TrackInfo, err error) {
 	//purchased
 	pl, err = fs.ReadFileAll("/Purchases/Ringtones.plist")
 	if err != nil {
+		err = nil
 		return
 	}
 	purtracks, purnameSet, purfileNameSet := Parse(pl, true, fs)
