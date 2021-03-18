@@ -86,12 +86,12 @@ func GetDeviceConfigList() []DeviceConfigInfo {
 	}
 	data, err := tools.ReadFileAll(tools.LocalPath("devices.json"))
 	if err != nil {
-		fmt.Printf("Read devices.json fail:%v", err)
+		fmt.Println(err)
 		return nil
 	}
 	err = json.Unmarshal(data, &deviceList)
 	if err != nil {
-		fmt.Printf("Unmarshal devices.json fail:%v", err)
+		fmt.Println(err)
 		return nil
 	}
 	return deviceList
