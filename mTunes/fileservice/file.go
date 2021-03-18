@@ -30,15 +30,21 @@ func (f *fileImpl) Read(p []byte) (readed int, err error) {
 		}
 
 		read := len(p) - readed
-		if read == 0 {
+		if read <= 0 {
 			break
 		}
+
 		if read > 1024*1024*4 {
 			read = 1024 * 1024 * 4
 		}
+
 		oneReaded, res := iapi.AFCFileRefRead(f.afcConnect, f.hand, p[readed:readed+read])
 		if res != 0 {
 			err = fmt.Errorf("Afc Read fail")
+			break
+		}
+		if oneReaded > read {
+			err = fmt.Errorf("AFCFileRefRead readed > read")
 			break
 		}
 		if oneReaded == 0 {
@@ -74,7 +80,7 @@ func (f *fileImpl) Write(p []byte) (writen int, err error) {
 		}
 
 		write := len(p) - writen
-		if write == 0 {
+		if write <= 0 {
 			break
 		}
 		if write > 1024*1024*4 {

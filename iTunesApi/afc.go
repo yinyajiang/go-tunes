@@ -8,7 +8,9 @@ package iapi
 #include "simpleApi.h"
 */
 import "C"
-import "unsafe"
+import (
+	"unsafe"
+)
 
 //AFCConnectionOpen ...
 func AFCConnectionOpen(afcconn uintptr) (conn uintptr) {
@@ -131,12 +133,13 @@ func AFCFileRefOpen(conn uintptr, path string, mode int64) (fileHand uint64, res
 
 //AFCFileRefRead ...
 func AFCFileRefRead(conn uintptr, filehand uint64, buff []byte) (readed int, res int) {
-	size := uint32(len(buff))
+
+	size := C.size_t(len(buff))
 	res = int(C.AFCFileRefRead(unsafe.Pointer(conn),
 		C.ulonglong(filehand),
 		unsafe.Pointer(SpliceToPtr(buff)),
 		(unsafe.Pointer(&size))))
-	readed = int(size)
+	readed = int(uint(size))
 	return
 }
 
