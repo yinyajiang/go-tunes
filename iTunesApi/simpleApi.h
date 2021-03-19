@@ -289,8 +289,6 @@ extern "C"
     int ATHostConnectionSendMessage(void *, void *);
     int ATHostConnectionGetGrappaSessionId(void *);
     void *ATHostConnectionReadMessage(void *);
-
-    void AddLoadDir(PWCHAR dir);
 #ifdef __cplusplus
 };
 #endif

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	mtunes "github.com/yinyajiang/go-tunes"
 	itunes "github.com/yinyajiang/go-tunes/itunesenv"
-	mtunes "github.com/yinyajiang/go-tunes/mtunes"
 )
 
 var (

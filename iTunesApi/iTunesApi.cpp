@@ -2,68 +2,52 @@
 #include <string>
 #include <vector>
 #ifdef WIN32
-#define DLOPEN(path) 			    LoadLibrary(path);
-#define DLFREE(h)				    if (h) FreeLibrary(h);
-#define FUNC_LOAD(func)		   	    this->func = (PF_##func)GetProcAddress(m_hDll,#func);
-#define VALUE_LOAD(func)		    FUNC_LOAD(func);\
-									{ \
-										void** ppTmp = (void**)this->func; \
-										if (ppTmp) \
-											this->func = (PF_##func)*ppTmp; \
-									}
-#define DIRECZT_LOAD(func) 			FUNC_LOAD(func)
+#define DLOPEN(path) LoadLibrary(path);
+#define DLFREE(h) \
+	if (h)        \
+		FreeLibrary(h);
+#define FUNC_LOAD(func) this->func = (PF_##func)GetProcAddress(m_hDll, #func);
+#define VALUE_LOAD(func)                      \
+	FUNC_LOAD(func);                          \
+	{                                         \
+		void **ppTmp = (void **)this->func;   \
+		if (ppTmp)                            \
+			this->func = (PF_##func) * ppTmp; \
+	}
+#define DIRECZT_LOAD(func) FUNC_LOAD(func)
 #else
-CFBundleRef DLOPEN(const char* path){
-	CFStringRef dllPath = ::CFStringCreateWithCString(NULL, path,::kCFStringEncodingUTF8);
+CFBundleRef DLOPEN(const char *path)
+{
+	CFStringRef dllPath = ::CFStringCreateWithCString(NULL, path, ::kCFStringEncodingUTF8);
 	CFURLRef pURLRef = ::CFURLCreateWithFileSystemPath(0, dllPath, kCFURLPOSIXPathStyle, 0);
 	CFBundleRef hDll = ::CFBundleCreate(::kCFAllocatorDefault, pURLRef);
 	return hDll;
 }
-#define DLFREE(h)				    if (h) h = NULL;
-#define DIRECZT_LOAD(func)			this->func = (PF_##func)::func;
-#define FUNC_LOAD(func)				this->func = (PF_##func)::CFBundleGetFunctionPointerForName(m_hDll, ::CFStringCreateWithCString(NULL, #func,::kCFStringEncodingUTF8));
-#define VALUE_LOAD(func)		    this->func = (PF_##func)(&::func);
+#define DLFREE(h) \
+	if (h)        \
+		h = NULL;
+#define DIRECZT_LOAD(func) this->func = (PF_##func)::func;
+#define FUNC_LOAD(func) this->func = (PF_##func)::CFBundleGetFunctionPointerForName(m_hDll, ::CFStringCreateWithCString(NULL, #func, ::kCFStringEncodingUTF8));
+#define VALUE_LOAD(func) this->func = (PF_##func)(&::func);
 #endif
 
-void AddEnvLoadDir(std::wstring dir)
-{
-#ifdef WIN32
-	DWORD dwSizeNeeded = ::GetEnvironmentVariable(L"PATH", NULL, 0);
-	dwSizeNeeded += dir.length() + 8; 
-	std::vector<wchar_t> buff;
-	buff.resize(dwSizeNeeded);
-	memset(&buff[0], 0, buff.size() * sizeof(wchar_t));
-	::GetEnvironmentVariable(L"PATH", (LPWSTR)&buff[0], dwSizeNeeded);
-
-	std::wstring env = (LPWSTR)&buff[0];
-	env += L";";
-	env += dir;
-	::SetEnvironmentVariable(L"PATH", dir.c_str());
-#endif
-}
-
-
-CCoreFoundation& CoreFoundation()
+CCoreFoundation &CoreFoundation()
 {
 	static CCoreFoundation obj;
 	return obj;
 }
 
-CMobileDevice&	MobileDevice(Boolean newdll)
+CMobileDevice &MobileDevice(Boolean newdll)
 {
 	static CMobileDevice obj(newdll);
 	return obj;
 }
 
-CAirTrafficHost&    AirTrafficHost()
+CAirTrafficHost &AirTrafficHost()
 {
 	static CAirTrafficHost obj;
 	return obj;
 }
-
-
-
-
 
 CCoreFoundation::CCoreFoundation(void)
 {
@@ -181,13 +165,8 @@ CCoreFoundation::CCoreFoundation(void)
 #endif
 }
 
-
-
-CCoreFoundation::~CCoreFoundation(void)
-{
-	DLFREE(m_hDll)
-}
-
+CCoreFoundation::~CCoreFoundation(void){
+	DLFREE(m_hDll)}
 
 CMobileDevice::CMobileDevice(Boolean newdll)
 {
@@ -196,7 +175,8 @@ CMobileDevice::CMobileDevice(Boolean newdll)
 	{
 		m_hDll = DLOPEN(L"MobileDevice.dll");
 	}
-	else {
+	else
+	{
 		m_hDll = DLOPEN(L"iTunesMobileDevice.dll");
 	}
 
@@ -339,11 +319,8 @@ CMobileDevice::CMobileDevice(Boolean newdll)
 #endif
 }
 
-CMobileDevice::~CMobileDevice(void)
-{
-	DLFREE(m_hDll)
-}
-
+CMobileDevice::~CMobileDevice(void){
+	DLFREE(m_hDll)}
 
 CAirTrafficHost::CAirTrafficHost(void)
 {
@@ -391,6 +368,3 @@ CAirTrafficHost::~CAirTrafficHost(void)
 {
 	DLFREE(m_hDll)
 }
-
-
-

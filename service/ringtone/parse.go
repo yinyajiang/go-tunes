@@ -3,8 +3,8 @@ package ringtone
 import (
 	"strconv"
 
-	mtunes "github.com/yinyajiang/go-tunes/mtunes"
-	"github.com/yinyajiang/go-tunes/mtunes/fileservice"
+	mtunes "github.com/yinyajiang/go-tunes"
+	"github.com/yinyajiang/go-tunes/service/fileservice"
 )
 
 /*

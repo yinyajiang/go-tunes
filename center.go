@@ -1,4 +1,4 @@
-package mtunes
+package tunes
 
 import (
 	"context"
@@ -23,11 +23,6 @@ var (
 	subChans          map[chan *NotifyEvent]struct{} = make(map[chan *NotifyEvent]struct{}, 2)
 	iapiSub           bool
 )
-
-//SetWinDllDir only for winodws
-func SetWinDllDir(dir string) {
-	iapi.SetWinDllDir(dir)
-}
 
 //SubscriptionDeviceNotify ...
 func SubscriptionDeviceNotify() (subChan <-chan *NotifyEvent) {

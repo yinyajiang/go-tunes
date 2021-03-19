@@ -1,4 +1,4 @@
-package mtunes
+package tunes
 
 import (
 	"fmt"

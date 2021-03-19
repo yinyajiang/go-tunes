@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
+	mtunes "github.com/yinyajiang/go-tunes"
 	iapi "github.com/yinyajiang/go-tunes/itunesapi"
-	mtunes "github.com/yinyajiang/go-tunes/mtunes"
 )
 
 type fileImpl struct {

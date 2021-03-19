@@ -308,7 +308,6 @@ private:
 	HMODULE m_hDll = 0;
 };
 
-void AddEnvLoadDir(std::wstring dir);
 CCoreFoundation &CoreFoundation();
 CMobileDevice &MobileDevice(Boolean newdll = true);
 CAirTrafficHost &AirTrafficHost();

@@ -2,15 +2,6 @@
 #include "unkonwStruct.h"
 #include "iTunesApi.h"
 
-void AddLoadDir(PWCHAR dir)
-{
-#ifdef WIN32
-	AddEnvLoadDir(dir);
-#else
-
-#endif
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //CoreFoundation.dll
 #ifdef WIN32
