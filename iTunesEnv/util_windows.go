@@ -57,10 +57,10 @@ func setRegStartup(key string) {
 }
 
 func installMsi(pkg string) {
-	wutil.StartAdminProcess("msiexec.exe", []string{"/i", `"` + pkg + `"`, "/qn", "/norestart"})
+	_,h := wutil.StartAdminProcess("msiexec.exe", []string{"/i", `"` + pkg + `"`, "/qn", "/norestart"})
 	w32.WaitForSingleObject(h, w32.INFINITE)
 }
 
 func getSysBit() string {
-	return strconv.Itoa(getSysBit())
+	return strconv.Itoa(w32.GetSysBit())
 }

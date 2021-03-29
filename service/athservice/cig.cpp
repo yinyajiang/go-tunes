@@ -1,6 +1,7 @@
 #include "cig.h"
 #include <stdlib.h>
 #include <memory>
+#include <cstring>
 
 struct Struct29
 {

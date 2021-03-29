@@ -41,6 +41,6 @@ type ImportTrackInfo struct {
 type Manager interface {
 	LoadTrack() (ret []TrackInfo, err error)
 	ImportTrack(base ImportTrackInfo)
-	DeleteTrack(pid uint64)
+	DeleteTrack(pid uint64) error
 	Commit(ctx context.Context) error
 }

@@ -56,28 +56,38 @@ func (m *managerImpl) LoadTrack() (ret []TrackInfo, err error) {
 	}()
 
 	m.bLoaded = true
-	pl, err := fs.ReadFileAll("/iTunes_Control/iTunes/Ringtones.plist")
-	if err != nil {
-		return
+	if fs.IsFileExist("/iTunes_Control/iTunes/Ringtones.plist") {
+		pl, e := fs.ReadFileAll("/iTunes_Control/iTunes/Ringtones.plist")
+		if e != nil {
+			err = e
+			return
+		}
+		m.tracks, m.nameSet, m.fileNameSet = Parse(pl, false, fs)
+	} else {
+		m.tracks = make(map[uint64]*TrackInfo)
+		m.nameSet = make(map[string]struct{})
+		m.fileNameSet = make(map[string]struct{})
 	}
-	m.tracks, m.nameSet, m.fileNameSet = Parse(pl, false, fs)
 
 	//purchased
-	pl, err = fs.ReadFileAll("/Purchases/Ringtones.plist")
-	if err != nil {
-		err = nil
-		return
+	if fs.IsFileExist("/Purchases/Ringtones.plist") {
+		pl, e := fs.ReadFileAll("/Purchases/Ringtones.plist")
+		if e != nil {
+			err = e
+			return
+		}
+		purtracks, purnameSet, purfileNameSet := Parse(pl, true, fs)
+		for p, t := range purtracks {
+			m.tracks[p] = t
+		}
+		for n, p := range purnameSet {
+			m.nameSet[n] = p
+		}
+		for n, p := range purfileNameSet {
+			m.fileNameSet[n] = p
+		}
 	}
-	purtracks, purnameSet, purfileNameSet := Parse(pl, true, fs)
-	for p, t := range purtracks {
-		m.tracks[p] = t
-	}
-	for n, p := range purnameSet {
-		m.nameSet[n] = p
-	}
-	for n, p := range purfileNameSet {
-		m.fileNameSet[n] = p
-	}
+
 	return
 }
 
@@ -137,11 +147,11 @@ func (m *managerImpl) ImportTrack(base ImportTrackInfo) {
 	info.fakeSrcPath = base.SrcPath
 
 	m.tracks[info.PID] = &info
-	return
+
 }
 
 //DeleteTrack ...
-func (m *managerImpl) DeleteTrack(pid uint64) {
+func (m *managerImpl) DeleteTrack(pid uint64) error {
 	if !m.bLoaded {
 		m.LoadTrack()
 	}
@@ -149,8 +159,9 @@ func (m *managerImpl) DeleteTrack(pid uint64) {
 	track, ok := m.tracks[pid]
 	if ok {
 		track.isDeleted = true
+		return nil
 	}
-	return
+	return fmt.Errorf("delete :not fond %d", pid)
 }
 
 //Commit ...
